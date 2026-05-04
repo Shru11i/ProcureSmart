@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Procurement Decision Platform — TOPSIS</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #ffffff;
+    --bg2: #f5f5f3;
+    --bg3: #ededea;
+    --text: #1a1a1a;
+    --text2: #6b6b6b;
+    --border: rgba(0,0,0,0.12);
+    --border2: rgba(0,0,0,0.22);
+    --blue: #185FA5;
+    --blue-light: #E6F1FB;
+    --blue-mid: #85B7EB;
+    --green-bg: #EAF3DE;
+    --green-border: #C0DD97;
+    --green-text: #27500A;
+    --green-sub: #3B6D11;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1c1a;
+      --bg2: #252523;
+      --bg3: #2e2e2b;
+      --text: #f0ede8;
+      --text2: #9a9890;
+      --border: rgba(255,255,255,0.1);
+      --border2: rgba(255,255,255,0.2);
+      --blue: #378ADD;
+      --blue-light: #0c2a45;
+      --blue-mid: #0C447C;
+      --green-bg: #173404;
+      --green-border: #27500A;
+      --green-text: #C0DD97;
+      --green-sub: #97C459;
+    }
+  }
+  body { font-family: var(--font); background: var(--bg3); color: var(--text); min-height: 100vh; padding: 0; }
+  .page-wrap { max-width: 900px; margin: 0 auto; padding: 24px 20px 60px; }
+  .hdr { padding: 0 0 1.25rem; border-bottom: 0.5px solid var(--border); margin-bottom: 1.5rem; }
+  .hdr-top { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
+  .lmark { width: 34px; height: 34px; background: var(--blue); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .lmark svg { width: 18px; height: 18px; fill: none; stroke: white; stroke-width: 2; }
+  .hdr h1 { font-size: 20px; font-weight: 600; color: var(--text); }
+  .hdr p { font-size: 13px; color: var(--text2); margin-left: 46px; margin-top: 2px; }
+  .step-nav { display: flex; border: 0.5px solid var(--border); border-radius: var(--radius-md); overflow: hidden; margin-bottom: 1.5rem; background: var(--bg); }
+  .snav { flex: 1; padding: 10px 8px; font-size: 12px; font-weight: 500; background: transparent; border: none; border-right: 0.5px solid var(--border); cursor: default; color: var(--text2); text-align: center; font-family: var(--font); }
+  .snav:last-child { border-right: none; }
+  .snav.active { background: var(--blue-light); color: var(--blue); }
+  .snav.done { background: var(--bg2); }
+  .snav .sn { display: block; font-size: 10px; margin-bottom: 2px; opacity: 0.65; }
+  .sec { display: none; }
+  .sec.active { display: block; }
+  .card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1.125rem 1.375rem; margin-bottom: 1rem; }
+  .ct { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 0.875rem; }
+  .ibox { background: var(--blue-light); border: 0.5px solid var(--blue-mid); border-radius: var(--radius-md); padding: 10px 16px; margin-bottom: 1rem; font-size: 13px; color: var(--blue); line-height: 1.65; }
+  .ibox strong { font-weight: 600; }
+  .btn { padding: 9px 20px; font-size: 13px; font-weight: 500; border-radius: var(--radius-md); border: 0.5px solid var(--border2); background: var(--bg); color: var(--text); cursor: pointer; transition: background 0.12s, transform 0.1s; font-family: var(--font); }
+  .btn:hover { background: var(--bg2); }
+  .btn:active { transform: scale(0.98); }
+  .btnp { background: var(--blue); color: white; border-color: var(--blue); }
+  .btnp:hover { opacity: 0.9; background: var(--blue); }
+  .brow { display: flex; gap: 10px; justify-content: flex-end; margin-top: 1.125rem; }
+  .tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .tbl th { padding: 8px 10px; text-align: left; color: var(--text2); font-weight: 500; border-bottom: 0.5px solid var(--border); font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .tbl td { padding: 10px 10px; border-bottom: 0.5px solid var(--border); color: var(--text); }
+  .tbl tr:last-child td { border-bottom: none; }
+  .tbl tr:hover td { background: var(--bg2); }
+  .sname { font-weight: 600; font-size: 13px; }
+  .bdg { display: inline-block; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+  .bg { background: #EAF3DE; color: #3B6D11; }
+  .bw { background: #FAEEDA; color: #854F0B; }
+  .bb { background: #FCEBEB; color: #A32D2D; }
+  .chip { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; background: var(--bg2); color: var(--text2); }
+  .wrow { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .wlbl { font-size: 13px; color: var(--text); min-width: 200px; }
+  .wval { font-size: 14px; font-weight: 600; color: var(--blue); min-width: 32px; text-align: center; }
+  .wslider { flex: 1; accent-color: var(--blue); cursor: pointer; }
+  .wtotal { display: flex; align-items: center; justify-content: space-between; padding: 10px 0 0; border-top: 0.5px solid var(--border); margin-top: 6px; }
+  .wtotal-lbl { font-size: 12px; color: var(--text2); }
+  .wtotal-val { font-size: 14px; font-weight: 600; color: #3B6D11; }
+  .mgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 1rem; }
+  .mcard { background: var(--bg2); border-radius: var(--radius-md); padding: 12px 16px; }
+  .mlbl { font-size: 11px; color: var(--text2); margin-bottom: 4px; }
+  .mval { font-size: 22px; font-weight: 600; color: var(--text); }
+  .medal { width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 600; }
+  .m1 { background: #FAEEDA; color: #854F0B; }
+  .m2 { background: #D3D1C7; color: #5F5E5A; }
+  .m3 { background: #FAECE7; color: #993C1D; }
+  .mn { background: var(--bg2); color: var(--text2); }
+  .sbar { height: 6px; border-radius: 3px; background: var(--blue); display: inline-block; vertical-align: middle; margin-right: 6px; }
+  .dban { background: var(--green-bg); border: 0.5px solid var(--green-border); border-radius: var(--radius-lg); padding: 1.25rem 1.375rem; display: flex; align-items: center; gap: 16px; margin-bottom: 1rem; }
+  .dico { width: 44px; height: 44px; border-radius: 50%; background: #639922; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .dtitle { font-size: 16px; font-weight: 600; color: var(--green-text); }
+  .dsub { font-size: 12px; color: var(--green-sub); margin-top: 3px; }
+  .overflow-x { overflow-x: auto; }
+  .chart-wrap { position: relative; width: 100%; }
+  @media (max-width: 600px) {
+    .mgrid { grid-template-columns: 1fr 1fr; }
+    .wlbl { min-width: 130px; font-size: 12px; }
+    .hdr h1 { font-size: 16px; }
+  }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+  <div class="hdr">
+    <div class="hdr-top">
+      <div class="lmark">
+        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      </div>
+      <h1>Procurement Decision Platform — TOPSIS</h1>
+    </div>
+    <p>Technique for Order of Preference by Similarity to Ideal Solution &middot; 5 suppliers &middot; 100 SKUs</p>
+  </div>
+
+  <div class="step-nav">
+    <div class="snav active" id="nav-1"><span class="sn">Step 1</span>Supplier Data</div>
+    <div class="snav" id="nav-2"><span class="sn">Step 2</span>Set Weights</div>
+    <div class="snav" id="nav-3"><span class="sn">Step 3</span>TOPSIS Matrix</div>
+    <div class="snav" id="nav-4"><span class="sn">Step 4</span>Decision</div>
+  </div>
+
+  <!-- STEP 1 -->
+  <div class="sec active" id="sec-1">
+    <div class="ibox"><strong>Step 1 — Supplier KPI dataset.</strong> Aggregated from 100 SKUs across 5 suppliers. TOPSIS evaluates each supplier's Euclidean distance from the ideal best and ideal worst across all criteria simultaneously. Green = best tier, amber = mid, red = weakest.</div>
+    <div class="card">
+      <div class="ct">Aggregated supplier performance</div>
+      <div class="overflow-x"><table class="tbl" id="sup-tbl"></table></div>
+    </div>
+    <div class="brow"><button class="btn btnp" onclick="goTo(2)">Set criterion weights &rarr;</button></div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="sec" id="sec-2">
+    <div class="ibox"><strong>Step 2 — Criterion weights.</strong> Assign a relative importance (1–10) to each KPI. Weights are automatically normalised to sum to 1.0. Higher = more important to your procurement strategy.</div>
+    <div class="card">
+      <div class="ct">Weight assignment</div>
+      <div id="weight-inputs"></div>
+      <div class="wtotal">
+        <span class="wtotal-lbl">Normalised weight sum</span>
+        <span class="wtotal-val" id="wsum">1.000</span>
+      </div>
+    </div>
+    <div class="card" style="background:var(--bg2)">
+      <div class="ct">Normalised weight preview</div>
+      <div id="weight-preview"></div>
+    </div>
+    <div class="brow">
+      <button class="btn" onclick="goTo(1)">&larr; Back</button>
+      <button class="btn btnp" onclick="computeTOPSIS()">Run TOPSIS &rarr;</button>
+    </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="sec" id="sec-3">
+    <div class="ibox"><strong>Step 3 — TOPSIS computation trail.</strong> The normalised weighted matrix is built from vector-normalised KPI values multiplied by your weights. PIS = best value per criterion, NIS = worst. Closeness Ci = D&sup2; / (D&sup1; + D&sup2;) &mdash; higher is better.</div>
+    <div class="card">
+      <div class="ct">Normalised weighted decision matrix (V)</div>
+      <div class="overflow-x" id="norm-matrix"></div>
+    </div>
+    <div class="card">
+      <div class="ct">Positive ideal solution (PIS) &amp; Negative ideal solution (NIS)</div>
+      <div class="overflow-x" id="ideal-table"></div>
+    </div>
+    <div class="card">
+      <div class="ct">Distance scores &amp; closeness coefficient</div>
+      <div class="overflow-x" id="dist-table"></div>
+    </div>
+    <div class="brow">
+      <button class="btn" onclick="goTo(2)">&larr; Adjust weights</button>
+      <button class="btn btnp" onclick="goTo(4)">View decision &rarr;</button>
+    </div>
+  </div>
+
+  <!-- STEP 4 -->
+  <div class="sec" id="sec-4">
+    <div id="dban"></div>
+    <div class="mgrid" id="smets"></div>
+    <div class="card">
+      <div class="ct">Supplier ranking — closeness coefficient (Ci)</div>
+      <div class="overflow-x"><table class="tbl" id="rank-tbl"></table></div>
+    </div>
+    <div class="card">
+      <div class="ct">Closeness coefficient by supplier</div>
+      <div class="chart-wrap" style="height:240px"><canvas id="ciChart" role="img" aria-label="Horizontal bar chart of TOPSIS closeness coefficients per supplier"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="ct">D&sup1; (distance to ideal best) vs D&sup2; (distance to ideal worst)</div>
+      <div class="chart-wrap" style="height:260px"><canvas id="distChart" role="img" aria-label="Grouped bar chart comparing D+ and D- distances per supplier"></canvas></div>
+    </div>
+    <div class="brow">
+      <button class="btn" onclick="goTo(3)">&larr; TOPSIS matrix</button>
+      <button class="btn" onclick="resetAll()">Start over</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPPLIERS = [
+  {name:"Supplier 1", skus:27, defect:1.804, leadTime:14.8, mfgLead:12.6, cost:45.3, inspPass:63.0},
+  {name:"Supplier 2", skus:22, defect:2.363, leadTime:18.5, mfgLead:15.6, cost:41.6, inspPass:43.2},
+  {name:"Supplier 3", skus:15, defect:2.466, leadTime:20.1, mfgLead:14.9, cost:43.6, inspPass:46.7},
+  {name:"Supplier 4", skus:18, defect:2.337, leadTime:15.2, mfgLead:15.3, cost:62.7, inspPass:16.7},
+  {name:"Supplier 5", skus:18, defect:2.665, leadTime:18.1, mfgLead:16.3, cost:44.8, inspPass:38.9},
+];
+const CRIT    = ["Defect Rate %","Lead Time (days)","Mfg Lead Time (days)","Mfg Cost","Insp Pass %"];
+const CRIT_S  = ["Defect Rate","Lead Time","Mfg Lead Time","Cost","Insp Pass %"];
+const KEYS    = ["defect","leadTime","mfgLead","cost","inspPass"];
+const BENEFIT = [false, false, false, false, true];
+const DEF_W   = [8, 5, 4, 6, 9];
+
+let tRes = null;
+let charts = [];
+
+function goTo(s) {
+  [1,2,3,4].forEach(i => {
+    document.getElementById('sec-'+i).classList.toggle('active', i===s);
+    const n = document.getElementById('nav-'+i);
+    n.classList.remove('active','done');
+    if (i===s) n.classList.add('active');
+    else if (i<s) n.classList.add('done');
+  });
+  if (s===4) buildResults();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function kpiCls(v, mn, mx, benefit) {
+  const nr = (v-mn)/(mx-mn||1);
+  const good = benefit ? nr>=0.67 : nr<=0.33;
+  const bad  = benefit ? nr<=0.33 : nr>=0.67;
+  return good ? 'bg' : bad ? 'bb' : 'bw';
+}
+
+function buildSupTable() {
+  const mins = KEYS.map(k => Math.min(...SUPPLIERS.map(s=>s[k])));
+  const maxs = KEYS.map(k => Math.max(...SUPPLIERS.map(s=>s[k])));
+  let h = '<thead><tr><th>Supplier</th><th>SKUs</th>';
+  CRIT.forEach(c => { h += `<th>${c}</th>`; });
+  h += '</tr></thead><tbody>';
+  SUPPLIERS.forEach(s => {
+    h += `<tr><td class="sname">${s.name}</td><td><span class="chip">${s.skus}</span></td>`;
+    KEYS.forEach((k,i) => {
+      const v = s[k], cls = kpiCls(v, mins[i], maxs[i], BENEFIT[i]);
+      h += `<td><span class="bdg ${cls}">${v.toFixed(i===0?3:1)}</span></td>`;
+    });
+    h += '</tr>';
+  });
+  h += '</tbody>';
+  document.getElementById('sup-tbl').innerHTML = h;
+}
+
+function buildWeightInputs() {
+  let h = '';
+  CRIT.forEach((c,i) => {
+    h += `<div class="wrow">
+      <span class="wlbl">${c}</span>
+      <input type="range" class="wslider" id="w${i}" min="1" max="10" step="1" value="${DEF_W[i]}" oninput="updateWeights()">
+      <span class="wval" id="wv${i}">${DEF_W[i]}</span>
+    </div>`;
+  });
+  document.getElementById('weight-inputs').innerHTML = h;
+  updateWeights();
+}
+
+function getWeights() {
+  const raw = CRIT.map((_,i) => parseInt(document.getElementById('w'+i).value));
+  const sum = raw.reduce((a,b)=>a+b,0);
+  return raw.map(v => v/sum);
+}
+
+function updateWeights() {
+  const raw = CRIT.map((_,i) => parseInt(document.getElementById('w'+i).value));
+  raw.forEach((v,i) => { document.getElementById('wv'+i).textContent = v; });
+  const sum = raw.reduce((a,b)=>a+b,0);
+  const norm = raw.map(v => v/sum);
+  document.getElementById('wsum').textContent = '1.000';
+  let ph = '';
+  norm.forEach((w,i) => {
+    const pct = (w*100).toFixed(1);
+    ph += `<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+      <span style="font-size:12px;color:var(--text);min-width:160px">${CRIT_S[i]}</span>
+      <div style="flex:1;height:14px;background:var(--bg3);border-radius:4px;overflow:hidden">
+        <div style="height:100%;width:${pct}%;background:var(--blue);border-radius:4px"></div>
+      </div>
+      <span style="font-size:12px;font-weight:600;color:var(--blue);min-width:38px;text-align:right">${pct}%</span>
+    </div>`;
+  });
+  document.getElementById('weight-preview').innerHTML = ph;
+}
+
+function computeTOPSIS() {
+  const w = getWeights();
+  const X = SUPPLIERS.map(s => KEYS.map(k => s[k]));
+  const colNorm = KEYS.map((_,j) => Math.sqrt(X.reduce((s,r) => s+r[j]*r[j], 0)));
+  const R = X.map(row => row.map((v,j) => v/(colNorm[j]||1)));
+  const V = R.map(row => row.map((v,j) => v*w[j]));
+  const PIS = CRIT.map((_,j) => BENEFIT[j] ? Math.max(...V.map(r=>r[j])) : Math.min(...V.map(r=>r[j])));
+  const NIS = CRIT.map((_,j) => BENEFIT[j] ? Math.min(...V.map(r=>r[j])) : Math.max(...V.map(r=>r[j])));
+  const Dp  = V.map(row => Math.sqrt(row.reduce((s,v,j) => s+(v-PIS[j])**2, 0)));
+  const Dm  = V.map(row => Math.sqrt(row.reduce((s,v,j) => s+(v-NIS[j])**2, 0)));
+  const Ci  = Dp.map((dp,i) => Dm[i]/(dp+Dm[i]));
+  tRes = {w, V, PIS, NIS, Dp, Dm, Ci};
+
+  let nmh = '<table class="tbl"><thead><tr><th>Supplier</th>';
+  CRIT_S.forEach(c => { nmh += `<th>${c}</th>`; });
+  nmh += '</tr></thead><tbody>';
+  SUPPLIERS.forEach((s,i) => {
+    nmh += `<tr><td class="sname">${s.name}</td>`;
+    V[i].forEach(v => { nmh += `<td>${v.toFixed(5)}</td>`; });
+    nmh += '</tr>';
+  });
+  nmh += '</tbody></table>';
+  document.getElementById('norm-matrix').innerHTML = nmh;
+
+  let ith = '<table class="tbl"><thead><tr><th>Solution</th>';
+  CRIT_S.forEach(c => { ith += `<th>${c}</th>`; });
+  ith += '</tr></thead><tbody>';
+  ith += '<tr><td><span class="bdg bg">PIS — ideal best</span></td>' + PIS.map(v=>`<td>${v.toFixed(5)}</td>`).join('') + '</tr>';
+  ith += '<tr><td><span class="bdg bb">NIS — ideal worst</span></td>' + NIS.map(v=>`<td>${v.toFixed(5)}</td>`).join('') + '</tr>';
+  ith += '</tbody></table>';
+  document.getElementById('ideal-table').innerHTML = ith;
+
+  const ranked = [...Ci.map((c,i)=>({c,i}))].sort((a,b)=>b.c-a.c);
+  const rankMap = {}; ranked.forEach((r,pos) => { rankMap[r.i] = pos+1; });
+  const mc = ['m1','m2','m3','mn','mn'];
+  let dth = '<table class="tbl"><thead><tr><th>Supplier</th><th>D⁺ (to best)</th><th>D⁻ (to worst)</th><th>Ci (closeness)</th><th>Rank</th></tr></thead><tbody>';
+  SUPPLIERS.forEach((s,i) => {
+    const r = rankMap[i];
+    dth += `<tr><td class="sname">${s.name}</td><td>${Dp[i].toFixed(5)}</td><td>${Dm[i].toFixed(5)}</td>
+      <td><strong>${Ci[i].toFixed(4)}</strong></td>
+      <td><span class="medal ${mc[r-1]}">${r}</span></td></tr>`;
+  });
+  dth += '</tbody></table>';
+  document.getElementById('dist-table').innerHTML = dth;
+  goTo(3);
+}
+
+function buildResults() {
+  if (!tRes) return;
+  const {Ci, Dp, Dm} = tRes;
+  const ranked = [...Ci.map((c,i)=>({c,i,s:SUPPLIERS[i],dp:Dp[i],dm:Dm[i]}))].sort((a,b)=>b.c-a.c);
+  const top = ranked[0];
+
+  document.getElementById('dban').innerHTML = `<div class="dban">
+    <div class="dico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+    <div><div class="dtitle">Recommended: ${top.s.name}</div>
+    <div class="dsub">Closeness coefficient Ci = ${top.c.toFixed(4)} &middot; Closest to ideal best across all weighted KPIs &middot; ${top.s.skus} SKUs evaluated</div></div>
+  </div>`;
+
+  document.getElementById('smets').innerHTML = `
+    <div class="mcard"><div class="mlbl">Top supplier Ci</div><div class="mval">${ranked[0].c.toFixed(3)}</div></div>
+    <div class="mcard"><div class="mlbl">Gap to 2nd place</div><div class="mval">${(ranked[0].c-ranked[1].c).toFixed(3)}</div></div>
+    <div class="mcard"><div class="mlbl">Suppliers ranked</div><div class="mval">${SUPPLIERS.length}</div></div>`;
+
+  const mc  = ['m1','m2','m3','mn','mn'];
+  const ml  = ['1st','2nd','3rd','4th','5th'];
+  let rt = '<thead><tr><th>Rank</th><th>Supplier</th><th>SKUs</th><th>Ci score</th><th>D⁺ (to best)</th><th>D⁻ (to worst)</th></tr></thead><tbody>';
+  ranked.forEach((r,pos) => {
+    rt += `<tr>
+      <td><span class="medal ${mc[pos]}">${ml[pos]}</span></td>
+      <td style="font-weight:${pos===0?600:400}">${r.s.name}</td>
+      <td><span class="chip">${r.s.skus}</span></td>
+      <td><span class="sbar" style="width:${Math.round(r.c*80)}px"></span><strong>${r.c.toFixed(4)}</strong></td>
+      <td style="font-size:12px;color:var(--text2)">${r.dp.toFixed(5)}</td>
+      <td style="font-size:12px;color:var(--text2)">${r.dm.toFixed(5)}</td>
+    </tr>`;
+  });
+  rt += '</tbody>';
+  document.getElementById('rank-tbl').innerHTML = rt;
+
+  charts.forEach(c => { try { c.destroy(); } catch(e) {} });
+  charts = [];
+
+  const ciChart = new Chart(document.getElementById('ciChart'), {
+    type: 'bar',
+    data: {
+      labels: ranked.map(r => r.s.name),
+      datasets: [{
+        label: 'Closeness coefficient (Ci)',
+        data: ranked.map(r => parseFloat(r.c.toFixed(4))),
+        backgroundColor: ranked.map((_,i) => i===0 ? '#185FA5' : '#85B7EB'),
+        borderRadius: 4
+      }]
+    },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { min:0, max:1, ticks:{ callback: v=>v.toFixed(2) } },
+        y: { ticks: { font:{ size:12 } } }
+      }
+    }
+  });
+  charts.push(ciChart);
+
+  const distChart = new Chart(document.getElementById('distChart'), {
+    type: 'bar',
+    data: {
+      labels: ranked.map(r => r.s.name),
+      datasets: [
+        { label: 'D⁺ — distance to ideal best', data: ranked.map(r=>parseFloat(r.dp.toFixed(5))), backgroundColor: '#E24B4A', borderRadius: 3 },
+        { label: 'D⁻ — distance to ideal worst', data: ranked.map(r=>parseFloat(r.dm.toFixed(5))), backgroundColor: '#1D9E75', borderRadius: 3 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: true, position: 'bottom', labels: { font:{size:12}, boxWidth:12, padding:14 } } },
+      scales: {
+        x: { ticks:{ font:{size:12} } },
+        y: { ticks:{ font:{size:12} } }
+      }
+    }
+  });
+  charts.push(distChart);
+}
+
+function resetAll() {
+  tRes = null;
+  charts.forEach(c => { try { c.destroy(); } catch(e) {} });
+  charts = [];
+  buildWeightInputs();
+  goTo(1);
+}
+
+buildSupTable();
+buildWeightInputs();
+</script>
+</body>
+</html>
