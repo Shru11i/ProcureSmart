@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProcureIQ — Supplier Decision Platform</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --ink: #0f0e0c;
+  --paper: #faf9f6;
+  --card: #ffffff;
+  --muted: #f2f0eb;
+  --border: #e0ddd6;
+  --text: #1a1917;
+  --sub: #6b6860;
+  --accent: #1a3a5c;
+  --accent2: #c8622a;
+  --accent3: #2a6645;
+  --gold: #b8860b;
+  --red: #a32d2d;
+  --green: #2a6645;
+  --amber: #854f0b;
+  --blue-light: #e8f0f8;
+  --radius: 10px;
+  --radius-lg: 16px;
+  --shadow: 0 1px 3px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.06);
+  --shadow-lg: 0 2px 8px rgba(0,0,0,.08), 0 12px 40px rgba(0,0,0,.10);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background: var(--paper);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* ─── Layout ─── */
+.shell { max-width: 1020px; margin: 0 auto; padding: 32px 24px 80px; }
+
+/* ─── Header ─── */
+.site-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  padding-bottom: 28px; border-bottom: 1px solid var(--border); margin-bottom: 32px;
+}
+.logo { display: flex; align-items: center; gap: 14px; }
+.logo-icon {
+  width: 44px; height: 44px; background: var(--accent); border-radius: 10px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.logo-icon svg { width: 22px; height: 22px; fill: none; stroke: white; stroke-width: 1.8; }
+.logo-text h1 { font-family: 'DM Serif Display', serif; font-size: 22px; color: var(--ink); letter-spacing: -0.3px; }
+.logo-text p { font-size: 12px; color: var(--sub); margin-top: 1px; font-weight: 300; }
+.method-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--muted); border: 1px solid var(--border);
+  border-radius: 20px; padding: 6px 14px; font-size: 12px; color: var(--sub); font-weight: 500;
+}
+.method-badge span { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); display: block; }
+
+/* ─── Step nav ─── */
+.step-rail {
+  display: flex; align-items: center; margin-bottom: 32px; gap: 0;
+}
+.step-item {
+  display: flex; align-items: center; gap: 10px; flex: 1;
+}
+.step-item:last-child { flex: none; }
+.step-circle {
+  width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 600; font-family: 'DM Mono', monospace;
+  border: 1.5px solid var(--border); background: var(--card); color: var(--sub);
+  transition: all .2s;
+}
+.step-circle.active { background: var(--accent); border-color: var(--accent); color: white; }
+.step-circle.done { background: var(--accent3); border-color: var(--accent3); color: white; }
+.step-label { font-size: 12px; font-weight: 500; color: var(--sub); white-space: nowrap; }
+.step-label.active { color: var(--accent); font-weight: 600; }
+.step-label.done { color: var(--accent3); }
+.step-connector { flex: 1; height: 1px; background: var(--border); margin: 0 8px; }
+.step-connector.done { background: var(--accent3); }
+
+/* ─── Section ─── */
+.sec { display: none; }
+.sec.active { display: block; }
+
+/* ─── Cards ─── */
+.card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 22px 26px; margin-bottom: 16px;
+  box-shadow: var(--shadow);
+}
+.card-title {
+  font-family: 'DM Serif Display', serif; font-size: 17px; color: var(--ink);
+  margin-bottom: 14px; letter-spacing: -0.2px;
+}
+.card-subtitle {
+  font-size: 12px; color: var(--sub); margin-top: -10px; margin-bottom: 14px; font-weight: 300;
+}
+
+/* ─── Info box ─── */
+.info {
+  background: var(--blue-light); border: 1px solid #b8cfe8; border-radius: var(--radius);
+  padding: 12px 16px; margin-bottom: 16px; font-size: 13px; color: var(--accent); line-height: 1.65;
+}
+.info strong { font-weight: 600; }
+
+/* ─── Upload zone ─── */
+.upload-zone {
+  border: 2px dashed var(--border); border-radius: var(--radius-lg);
+  padding: 52px 32px; text-align: center; cursor: pointer;
+  transition: all .2s; background: var(--muted); margin-bottom: 16px;
+}
+.upload-zone:hover, .upload-zone.drag { border-color: var(--accent); background: var(--blue-light); }
+.upload-icon { margin: 0 auto 14px; width: 52px; height: 52px; background: var(--card); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow); }
+.upload-icon svg { width: 24px; height: 24px; stroke: var(--accent); fill: none; stroke-width: 1.8; }
+.upload-title { font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--ink); margin-bottom: 6px; }
+.upload-sub { font-size: 13px; color: var(--sub); margin-bottom: 18px; font-weight: 300; }
+.upload-btn-label {
+  display: inline-block; padding: 9px 22px;
+  background: var(--accent); color: white; border-radius: var(--radius);
+  font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'Outfit', sans-serif;
+}
+#file-input { display: none; }
+
+/* ─── Table ─── */
+.tbl-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead th {
+  padding: 9px 12px; text-align: left; color: var(--sub); font-weight: 600;
+  border-bottom: 1.5px solid var(--border); font-size: 11px; text-transform: uppercase; letter-spacing: .05em;
+  background: var(--muted); white-space: nowrap;
+}
+tbody td { padding: 11px 12px; border-bottom: 1px solid var(--border); color: var(--text); }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover td { background: var(--muted); }
+.sname { font-weight: 600; font-size: 13px; font-family: 'Outfit', sans-serif; }
+.bdg { display: inline-block; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+.bg { background: #e5f3e8; color: var(--green); }
+.bw { background: #faeeda; color: var(--amber); }
+.bb { background: #fceaea; color: var(--red); }
+.chip { display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 11px; background: var(--muted); color: var(--sub); font-family: 'DM Mono', monospace; }
+
+/* ─── Chart grid ─── */
+.chart-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+.chart-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+.chart-wrap { position: relative; width: 100%; }
+@media(max-width:700px) { .chart-grid-2, .chart-grid-3 { grid-template-columns: 1fr; } }
+
+/* ─── Stat strip ─── */
+.stat-strip { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 16px; }
+.stat-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; text-align: center; }
+.stat-label { font-size: 10px; color: var(--sub); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
+.stat-val { font-family: 'DM Serif Display', serif; font-size: 22px; color: var(--ink); }
+.stat-sub { font-size: 10px; color: var(--sub); margin-top: 2px; }
+@media(max-width:700px) { .stat-strip { grid-template-columns: 1fr 1fr; } }
+
+/* ─── AHP Questionnaire ─── */
+.q-progress-bar { height: 4px; background: var(--border); border-radius: 2px; margin-bottom: 28px; overflow: hidden; }
+.q-progress-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width .4s ease; }
+
+.q-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 32px 32px 28px; box-shadow: var(--shadow-lg);
+  display: none; animation: fadeIn .3s ease;
+}
+.q-card.active { display: block; }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+.q-counter { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--sub); margin-bottom: 12px; letter-spacing: .05em; }
+.q-heading { font-family: 'DM Serif Display', serif; font-size: 22px; color: var(--ink); line-height: 1.4; margin-bottom: 6px; }
+.q-subhead { font-size: 13px; color: var(--sub); margin-bottom: 32px; font-weight: 300; }
+
+.q-versus {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 24px; gap: 16px;
+}
+.q-crit {
+  flex: 1; text-align: center; padding: 16px 12px;
+  border: 1.5px solid var(--border); border-radius: var(--radius);
+  background: var(--muted); transition: all .2s;
+}
+.q-crit.left { border-right: none; border-radius: var(--radius) 0 0 var(--radius); }
+.q-crit.right { border-left: none; border-radius: 0 var(--radius) var(--radius) 0; }
+.q-crit.winning { border-color: var(--accent); background: var(--blue-light); }
+.q-crit-name { font-weight: 600; font-size: 14px; color: var(--text); }
+.q-crit-icon { font-size: 22px; margin-bottom: 6px; }
+.vs-badge { flex-shrink: 0; width: 36px; height: 36px; border-radius: 50%; background: var(--muted); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: var(--sub); }
+
+.slider-section { margin-bottom: 28px; }
+.slider-labels { display: flex; justify-content: space-between; margin-bottom: 10px; }
+.slider-label { font-size: 11px; color: var(--sub); font-weight: 500; }
+
+.ahp-slider { -webkit-appearance: none; appearance: none; width: 100%; height: 6px; border-radius: 3px; outline: none; cursor: pointer; background: linear-gradient(to right, var(--accent3) 0%, var(--border) 50%, var(--accent) 100%); }
+.ahp-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 24px; border-radius: 50%; background: white; border: 2.5px solid var(--accent); box-shadow: 0 2px 8px rgba(0,0,0,.15); cursor: grab; }
+.ahp-slider::-moz-range-thumb { width: 24px; height: 24px; border-radius: 50%; background: white; border: 2.5px solid var(--accent); box-shadow: 0 2px 8px rgba(0,0,0,.15); cursor: grab; }
+
+.saaty-tick-row { display: flex; justify-content: space-between; margin-top: 6px; padding: 0 2px; }
+.saaty-tick { text-align: center; font-size: 9px; color: var(--sub); font-family: 'DM Mono', monospace; }
+
+.importance-display {
+  text-align: center; padding: 16px; background: var(--muted);
+  border-radius: var(--radius); margin-bottom: 24px; border: 1px solid var(--border);
+}
+.importance-num { font-family: 'DM Serif Display', serif; font-size: 40px; color: var(--accent); line-height: 1; }
+.importance-desc { font-size: 13px; color: var(--sub); margin-top: 4px; }
+.importance-winner { font-size: 14px; font-weight: 600; color: var(--ink); margin-top: 4px; }
+
+.q-nav { display: flex; justify-content: space-between; align-items: center; }
+.q-dots { display: flex; gap: 6px; }
+.q-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); transition: background .2s; }
+.q-dot.done { background: var(--accent3); }
+.q-dot.active { background: var(--accent); }
+
+/* ─── Buttons ─── */
+.btn {
+  padding: 10px 22px; font-size: 13px; font-weight: 600; border-radius: var(--radius);
+  border: 1.5px solid var(--border); background: var(--card); color: var(--text);
+  cursor: pointer; transition: all .15s; font-family: 'Outfit', sans-serif; letter-spacing: .01em;
+}
+.btn:hover { background: var(--muted); border-color: var(--sub); }
+.btn:active { transform: scale(.98); }
+.btn-primary { background: var(--accent); color: white; border-color: var(--accent); }
+.btn-primary:hover { background: #0f2640; border-color: #0f2640; }
+.btn-success { background: var(--accent3); color: white; border-color: var(--accent3); }
+.btn-success:hover { background: #1d4d31; }
+.btn-row { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+
+/* ─── Weights display ─── */
+.wbar-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.wbar-lbl { font-size: 13px; color: var(--text); min-width: 190px; font-weight: 500; }
+.wbar-bg { flex: 1; height: 20px; background: var(--muted); border-radius: 4px; overflow: hidden; border: 1px solid var(--border); }
+.wbar-fill { height: 100%; background: var(--accent); border-radius: 4px; transition: width .6s ease; display: flex; align-items: center; justify-content: flex-end; padding-right: 7px; }
+.wbar-pct { font-size: 10px; color: white; font-weight: 700; font-family: 'DM Mono', monospace; }
+.wbar-rank { font-size: 12px; color: var(--sub); min-width: 24px; text-align: right; font-family: 'DM Mono', monospace; }
+
+/* ─── Matrix ─── */
+.mtx { width: 100%; border-collapse: collapse; font-size: 11.5px; font-family: 'DM Mono', monospace; }
+.mtx th, .mtx td { padding: 7px 10px; border: 1px solid var(--border); text-align: center; }
+.mtx th { background: var(--muted); font-weight: 600; color: var(--sub); font-size: 10px; }
+.mtx-d { background: var(--muted); color: var(--sub); font-style: italic; }
+
+/* ─── CR Badge ─── */
+.cr-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.cr-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+
+/* ─── Results ─── */
+.mgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+.mcard { background: var(--muted); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
+.mlbl { font-size: 11px; color: var(--sub); margin-bottom: 4px; font-weight: 500; text-transform: uppercase; letter-spacing: .04em; }
+.mval { font-family: 'DM Serif Display', serif; font-size: 26px; color: var(--ink); }
+.medal { width: 26px; height: 26px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; }
+.m1 { background: #faeeda; color: var(--amber); }
+.m2 { background: #e5e4e0; color: #5f5e5a; }
+.m3 { background: #fceaea; color: var(--red); }
+.mn { background: var(--muted); color: var(--sub); }
+.sbar { height: 5px; border-radius: 3px; background: var(--accent); display: inline-block; vertical-align: middle; margin-right: 6px; }
+.dban { background: var(--accent3); border-radius: var(--radius-lg); padding: 20px 24px; display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
+.dico { width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,.2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.dtitle { font-family: 'DM Serif Display', serif; font-size: 18px; color: white; }
+.dsub { font-size: 12px; color: rgba(255,255,255,.75); margin-top: 3px; font-weight: 300; }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- Header -->
+  <div class="site-header">
+    <div class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      </div>
+      <div class="logo-text">
+        <h1>ProcureIQ</h1>
+        <p>AI-powered supplier decision platform</p>
+      </div>
+    </div>
+    <div class="method-badge"><span></span>AHP weights · TOPSIS ranking</div>
+  </div>
+
+  <!-- Step rail -->
+  <div class="step-rail">
+    <div class="step-item">
+      <div class="step-circle active" id="sc-1">1</div>
+      <div class="step-label active" id="sl-1">Data Explorer</div>
+    </div>
+    <div class="step-connector" id="con-1"></div>
+    <div class="step-item">
+      <div class="step-circle" id="sc-2">2</div>
+      <div class="step-label" id="sl-2">AHP Questionnaire</div>
+    </div>
+    <div class="step-connector" id="con-2"></div>
+    <div class="step-item">
+      <div class="step-circle" id="sc-3">3</div>
+      <div class="step-label" id="sl-3">Weights & Matrix</div>
+    </div>
+    <div class="step-connector" id="con-3"></div>
+    <div class="step-item">
+      <div class="step-circle" id="sc-4">4</div>
+      <div class="step-label" id="sl-4">Decision</div>
+    </div>
+  </div>
+
+  <!-- ══ STEP 1 ══ -->
+  <div class="sec active" id="sec-1">
+    <div class="info"><strong>Step 1 — Upload & Explore.</strong> Upload your supplier CSV file. The platform will parse and aggregate all KPIs, then display interactive visualisations to help you understand supplier patterns before making your decision.</div>
+
+    <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()" ondragover="handleDrag(event,true)" ondragleave="handleDrag(event,false)" ondrop="handleDrop(event)">
+      <div class="upload-icon"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+      <div class="upload-title">Drop your supplier CSV here</div>
+      <div class="upload-sub">Requires columns: Supplier name, Defect rates, Lead time, Manufacturing lead time, Manufacturing costs, Inspection results</div>
+      <label class="upload-btn-label" for="file-input">Choose file</label>
+      <input type="file" id="file-input" accept=".csv" onchange="handleFile(event)">
+    </div>
+
+    <div id="data-section" style="display:none">
+      <!-- Stats -->
+      <div class="stat-strip" id="stat-strip"></div>
+
+      <!-- Table -->
+      <div class="card">
+        <div class="card-title">Aggregated supplier performance</div>
+        <div class="card-subtitle">Average KPIs across all SKUs per supplier · Inspection Pass Rate derived from Pass/Fail/Pending results</div>
+        <div class="tbl-wrap"><table id="sup-tbl"></table></div>
+      </div>
+
+      <!-- Charts row 1 -->
+      <div class="chart-grid-2">
+        <div class="card" style="margin-bottom:0">
+          <div class="card-title">Defect Rate by Supplier</div>
+          <div class="chart-wrap" style="height:220px"><canvas id="c-defect"></canvas></div>
+        </div>
+        <div class="card" style="margin-bottom:0">
+          <div class="card-title">Inspection Pass Rate</div>
+          <div class="chart-wrap" style="height:220px"><canvas id="c-insp"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Charts row 2 -->
+      <div class="chart-grid-3">
+        <div class="card" style="margin-bottom:0">
+          <div class="card-title">Lead Time (days)</div>
+          <div class="chart-wrap" style="height:200px"><canvas id="c-lead"></canvas></div>
+        </div>
+        <div class="card" style="margin-bottom:0">
+          <div class="card-title">Mfg Lead Time (days)</div>
+          <div class="chart-wrap" style="height:200px"><canvas id="c-mfglead"></canvas></div>
+        </div>
+        <div class="card" style="margin-bottom:0">
+          <div class="card-title">Manufacturing Cost</div>
+          <div class="chart-wrap" style="height:200px"><canvas id="c-cost"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Radar -->
+      <div class="chart-grid-2" style="margin-top:16px">
+        <div class="card" style="margin-bottom:0">
+          <div class="card-title">Multi-KPI Radar</div>
+          <div class="card-subtitle">Normalised 0–1 scale (higher = better performance)</div>
+          <div class="chart-wrap" style="height:280px"><canvas id="c-radar"></canvas></div>
+        </div>
+        <div class="card" style="margin-bottom:0">
+          <div class="card-title">KPI Distribution Heatmap</div>
+          <div class="card-subtitle">Relative performance across all criteria</div>
+          <div id="heatmap-container" style="overflow-x:auto;margin-top:6px"></div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="goTo(2)">Begin AHP questionnaire →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ STEP 2: AHP Questionnaire ══ -->
+  <div class="sec" id="sec-2">
+    <div class="info"><strong>Step 2 — Pairwise importance questionnaire.</strong> Answer 9 questions to define how much each KPI matters to your procurement strategy. Your answers generate a pairwise comparison matrix using Saaty's 1–9 scale, from which criterion weights are derived.</div>
+
+    <div class="q-progress-bar"><div class="q-progress-fill" id="q-progress" style="width:0%"></div></div>
+
+    <div id="q-cards-container"></div>
+
+    <!-- Summary card shown after all answered -->
+    <div id="q-summary" style="display:none">
+      <div class="card">
+        <div class="card-title">Your responses — all 9 questions answered</div>
+        <div class="card-subtitle">Review before calculating weights</div>
+        <table>
+          <thead><tr><th>#</th><th>Criterion A</th><th>vs</th><th>Criterion B</th><th>Score</th><th>Interpretation</th></tr></thead>
+          <tbody id="q-summary-body"></tbody>
+        </table>
+      </div>
+      <div class="btn-row">
+        <button class="btn" onclick="goTo(1)">← Back to data</button>
+        <button class="btn" onclick="restartQ()">Retake questionnaire</button>
+        <button class="btn btn-primary" onclick="computeAHP()">Calculate weights →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ STEP 3: Weights & Matrix ══ -->
+  <div class="sec" id="sec-3">
+    <div class="info"><strong>Step 3 — AHP criterion weights.</strong> Your pairwise comparison matrix is normalised via the eigenvector method to produce priority weights. The Consistency Ratio (CR) must be below 0.10 for judgements to be considered valid.</div>
+    <div id="cr-display" style="margin-bottom:16px"></div>
+    <div class="card">
+      <div class="card-title">Priority weights ranking</div>
+      <div id="weight-bars"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Pairwise comparison matrix</div>
+      <div class="card-subtitle">DR = Defect Rate · LT = Lead Time · ML = Mfg Lead Time · CO = Cost · IP = Inspection Pass</div>
+      <div class="tbl-wrap" id="matrix-display"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn" onclick="goTo(2)">← Adjust answers</button>
+      <button class="btn btn-primary" onclick="computeTOPSIS(); goTo(4)">Run TOPSIS & rank suppliers →</button>
+    </div>
+  </div>
+
+  <!-- ══ STEP 4: Decision ══ -->
+  <div class="sec" id="sec-4">
+    <div id="dban"></div>
+    <div class="mgrid" id="smets"></div>
+    <div class="card">
+      <div class="card-title">Supplier ranking — TOPSIS closeness coefficient</div>
+      <div class="card-subtitle">Ci = D⁻ / (D⁺ + D⁻) · Higher Ci = closer to ideal best performance</div>
+      <div class="tbl-wrap"><table id="rank-tbl"></table></div>
+    </div>
+    <div class="chart-grid-2">
+      <div class="card" style="margin-bottom:0">
+        <div class="card-title">Closeness coefficient (Ci)</div>
+        <div class="chart-wrap" style="height:240px"><canvas id="ciChart"></canvas></div>
+      </div>
+      <div class="card" style="margin-bottom:0">
+        <div class="card-title">D⁺ vs D⁻ distances</div>
+        <div class="chart-wrap" style="height:240px"><canvas id="distChart"></canvas></div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:0">
+      <div class="card-title">Score breakdown by criterion weight</div>
+      <div class="chart-wrap" style="height:260px"><canvas id="breakChart"></canvas></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn" onclick="goTo(3)">← View weights</button>
+      <button class="btn" onclick="resetAll()">Start over</button>
+    </div>
+  </div>
+
+</div><!-- /shell -->
+
+<script>
+// ═══════════════════════════════════════════════
+// DATA & CONFIG
+// ═══════════════════════════════════════════════
+const CRIT    = ["Defect Rate %","Lead Time (days)","Mfg Lead Time (days)","Mfg Cost","Inspection Pass %"];
+const CRIT_S  = ["Defect Rate","Lead Time","Mfg Lead Time","Cost","Insp Pass %"];
+const ABBR    = ["DR","LT","ML","CO","IP"];
+const KEYS    = ["defect","leadTime","mfgLead","cost","inspPass"];
+const BENEFIT = [false,false,false,false,true]; // false = lower is better
+const CRIT_EMOJI = ["🔬","⏱","🏭","💰","✅"];
+
+const QUESTIONS = [
+  {a:0,b:1,text:"How much more important is Defect Rate compared to Lead Time?",sub:"Quality defects vs delivery speed"},
+  {a:0,b:2,text:"How much more important is Defect Rate compared to Manufacturing Lead Time?",sub:"Quality defects vs production duration"},
+  {a:0,b:3,text:"How much more important is Defect Rate compared to Inspection Pass Rate?",sub:"Defect rate vs overall inspection outcome"},
+  {a:3,b:1,text:"How much more important is Inspection Pass Rate compared to Lead Time?",sub:"Inspection outcomes vs delivery speed"},
+  {a:3,b:2,text:"How much more important is Inspection Pass Rate compared to Manufacturing Lead Time?",sub:"Inspection outcomes vs production duration"},
+  {a:3,b:4,text:"How much more important is Inspection Pass Rate compared to Cost?",sub:"Quality assurance vs manufacturing cost"},
+  {a:1,b:2,text:"How much more important is Lead Time compared to Manufacturing Lead Time?",sub:"Delivery speed vs production duration"},
+  {a:1,b:4,text:"How much more important is Lead Time compared to Cost?",sub:"Delivery speed vs manufacturing cost"},
+  {a:2,b:4,text:"How much more important is Manufacturing Lead Time compared to Cost?",sub:"Production duration vs manufacturing cost"},
+];
+
+const SAATY_LABELS = ["Equal","Slightly","Moderate","Mod–Strong","Strong","Strong–Very","Very Strong","Very–Abs","Absolute"];
+const SAATY_DESC = {1:"Equally important",2:"Slightly more important",3:"Moderately more important",4:"Moderately to strongly more important",5:"Strongly more important",6:"Strongly to very strongly more important",7:"Very strongly more important",8:"Very strongly to absolutely more important",9:"Absolutely more important"};
+const RI = [0,0,0,0.58,0.90,1.12,1.24,1.32,1.41,1.45];
+
+const COLORS = ['#1a3a5c','#c8622a','#2a6645','#b8860b','#7b4ea0'];
+const COLORS_LIGHT = ['#e8f0f8','#faeee8','#e5f3e8','#fdf3dc','#f0e8f8'];
+
+let supplierData = [];
+let ahpAnswers = Array(9).fill(1);
+let currentQ = 0;
+let weights = [];
+let topsisResult = null;
+let resultCharts = [];
+
+// ═══════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════
+function goTo(s) {
+  [1,2,3,4].forEach(i => {
+    document.getElementById('sec-'+i).classList.toggle('active', i===s);
+    const sc = document.getElementById('sc-'+i);
+    const sl = document.getElementById('sl-'+i);
+    sc.classList.remove('active','done');
+    sl.classList.remove('active','done');
+    if(i===s){ sc.classList.add('active'); sl.classList.add('active'); }
+    else if(i<s){ sc.classList.add('done'); sl.classList.add('done'); }
+    if(i<4){
+      const con = document.getElementById('con-'+i);
+      con.classList.toggle('done', i<s);
+    }
+  });
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+// ═══════════════════════════════════════════════
+// FILE HANDLING
+// ═══════════════════════════════════════════════
+function handleDrag(e, on) {
+  e.preventDefault();
+  document.getElementById('upload-zone').classList.toggle('drag', on);
+}
+function handleDrop(e) {
+  e.preventDefault();
+  handleDrag(e, false);
+  const f = e.dataTransfer.files[0];
+  if(f) parseCSV(f);
+}
+function handleFile(e) {
+  const f = e.target.files[0];
+  if(f) parseCSV(f);
+}
+
+function parseCSV(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const lines = e.target.result.split('\n').filter(l=>l.trim());
+    const headers = lines[0].split(',').map(h=>h.trim().toLowerCase().replace(/"/g,''));
+    
+    const findCol = (...opts) => {
+      for(const o of opts){
+        const idx = headers.findIndex(h=>h.includes(o.toLowerCase()));
+        if(idx>=0) return idx;
+      }
+      return -1;
+    };
+
+    const ci = {
+      name: findCol('supplier name','supplier'),
+      defect: findCol('defect rate','defect'),
+      lead: findCol('lead time','leadtime'),
+      mfglead: findCol('manufacturing lead','mfg lead'),
+      cost: findCol('manufacturing cost','cost'),
+      insp: findCol('inspection result','inspection'),
+    };
+
+    const raw = {};
+    for(let i=1;i<lines.length;i++){
+      const cols = lines[i].split(',').map(c=>c.trim().replace(/"/g,''));
+      if(!cols[ci.name]) continue;
+      const name = cols[ci.name];
+      if(!raw[name]) raw[name]={defect:[],leadTime:[],mfgLead:[],cost:[],inspPass:[]};
+      const defVal = parseFloat(cols[ci.defect]);
+      const ltVal  = parseFloat(cols[ci.lead]);
+      const mlVal  = parseFloat(cols[ci.mfglead]);
+      const coVal  = parseFloat(cols[ci.cost]);
+      const insp   = cols[ci.insp]||'';
+      const inspScore = insp.toLowerCase().includes('pass')?100:insp.toLowerCase().includes('fail')?0:50;
+      if(!isNaN(defVal)) raw[name].defect.push(defVal);
+      if(!isNaN(ltVal))  raw[name].leadTime.push(ltVal);
+      if(!isNaN(mlVal))  raw[name].mfgLead.push(mlVal);
+      if(!isNaN(coVal))  raw[name].cost.push(coVal);
+      raw[name].inspPass.push(inspScore);
+    }
+
+    supplierData = Object.entries(raw).map(([name,v])=>({
+      name,
+      skus: v.defect.length,
+      defect:   avg(v.defect),
+      leadTime: avg(v.leadTime),
+      mfgLead:  avg(v.mfgLead),
+      cost:     avg(v.cost),
+      inspPass: avg(v.inspPass),
+    })).filter(s=>s.skus>0);
+
+    if(supplierData.length===0){ alert('Could not parse supplier data. Check column names.'); return; }
+    renderDataSection();
+  };
+  reader.readAsText(file);
+}
+
+function avg(arr) { return arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : 0; }
+
+// ═══════════════════════════════════════════════
+// STEP 1: DATA SECTION
+// ═══════════════════════════════════════════════
+let step1Charts = [];
+
+function renderDataSection() {
+  document.getElementById('data-section').style.display='block';
+  document.getElementById('upload-zone').style.display='none';
+  step1Charts.forEach(c=>{try{c.destroy();}catch(e){}});
+  step1Charts=[];
+
+  const S = supplierData;
+  const totalSkus = S.reduce((a,s)=>a+s.skus,0);
+  const bestDefect = S.reduce((a,s)=>s.defect<a.defect?s:a,S[0]);
+  const bestInsp = S.reduce((a,s)=>s.inspPass>a.inspPass?s:a,S[0]);
+  const bestLead = S.reduce((a,s)=>s.leadTime<a.leadTime?s:a,S[0]);
+
+  document.getElementById('stat-strip').innerHTML = `
+    <div class="stat-card"><div class="stat-label">Suppliers</div><div class="stat-val">${S.length}</div><div class="stat-sub">evaluated</div></div>
+    <div class="stat-card"><div class="stat-label">Total SKUs</div><div class="stat-val">${totalSkus}</div><div class="stat-sub">across dataset</div></div>
+    <div class="stat-card"><div class="stat-label">Best Defect Rate</div><div class="stat-val">${bestDefect.defect.toFixed(2)}%</div><div class="stat-sub">${bestDefect.name}</div></div>
+    <div class="stat-card"><div class="stat-label">Best Insp Pass</div><div class="stat-val">${bestInsp.inspPass.toFixed(0)}%</div><div class="stat-sub">${bestInsp.name}</div></div>
+    <div class="stat-card"><div class="stat-label">Fastest Lead</div><div class="stat-val">${bestLead.leadTime.toFixed(1)}d</div><div class="stat-sub">${bestLead.name}</div></div>`;
+
+  // Table
+  buildTable();
+
+  // Charts
+  const names = S.map(s=>s.name);
+  const defects = S.map(s=>s.defect);
+  const insps   = S.map(s=>s.inspPass);
+  const leads   = S.map(s=>s.leadTime);
+  const mfgleads= S.map(s=>s.mfgLead);
+  const costs   = S.map(s=>s.cost);
+
+  step1Charts.push(makeBarChart('c-defect', names, defects, 'Defect Rate %', COLORS[0], false, '%'));
+  step1Charts.push(makeBarChart('c-insp', names, insps, 'Inspection Pass %', COLORS[2], true, '%'));
+  step1Charts.push(makeBarChart('c-lead', names, leads, 'Lead Time', COLORS[1], false, 'd'));
+  step1Charts.push(makeBarChart('c-mfglead', names, mfgleads, 'Mfg Lead Time', COLORS[3], false, 'd'));
+  step1Charts.push(makeBarChart('c-cost', names, costs, 'Mfg Cost', COLORS[4], false, ''));
+  buildRadar(names);
+  buildHeatmap();
+}
+
+function kpiCls(v,mn,mx,benefit){
+  const n=(v-mn)/(mx-mn||1);
+  const good=benefit?n>=0.67:n<=0.33, bad=benefit?n<=0.33:n>=0.67;
+  return good?'bg':bad?'bb':'bw';
+}
+
+function buildTable() {
+  const S = supplierData;
+  const mins = KEYS.map(k=>Math.min(...S.map(s=>s[k])));
+  const maxs = KEYS.map(k=>Math.max(...S.map(s=>s[k])));
+  let h='<thead><tr><th>Supplier</th><th>SKUs</th>';
+  CRIT.forEach(c=>{h+=`<th>${c}</th>`;});
+  h+='</tr></thead><tbody>';
+  S.forEach(s=>{
+    h+=`<tr><td class="sname">${s.name}</td><td><span class="chip">${s.skus}</span></td>`;
+    KEYS.forEach((k,i)=>{
+      const v=s[k], cls=kpiCls(v,mins[i],maxs[i],BENEFIT[i]);
+      const d=i===0?v.toFixed(3):i===3?v.toFixed(1):v.toFixed(1);
+      h+=`<td><span class="bdg ${cls}">${d}</span></td>`;
+    });
+    h+='</tr>';
+  });
+  h+='</tbody>';
+  document.getElementById('sup-tbl').innerHTML=h;
+}
+
+function makeBarChart(id, labels, data, label, color, higherBetter, suffix) {
+  const mn=Math.min(...data), mx=Math.max(...data);
+  const bgs = data.map(v=>{
+    const nr=(v-mn)/(mx-mn||1);
+    const good=higherBetter?nr>=0.67:nr<=0.33;
+    const bad=higherBetter?nr<=0.33:nr>=0.67;
+    return good?'#2a664580':bad?'#a32d2d80':color+'80';
+  });
+  const borders = data.map(v=>{
+    const nr=(v-mn)/(mx-mn||1);
+    const good=higherBetter?nr>=0.67:nr<=0.33;
+    const bad=higherBetter?nr<=0.33:nr>=0.67;
+    return good?'#2a6645':bad?'#a32d2d':color;
+  });
+  return new Chart(document.getElementById(id),{
+    type:'bar',
+    data:{labels,datasets:[{label,data,backgroundColor:bgs,borderColor:borders,borderWidth:2,borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.parsed.y.toFixed(2)}${suffix}`}}},
+      scales:{x:{ticks:{font:{size:10,family:'Outfit'}}},y:{ticks:{font:{size:10,family:'DM Mono'},callback:v=>v+suffix},grid:{color:'rgba(0,0,0,.05)'}}}
+    }
+  });
+}
+
+function buildRadar(names) {
+  const S = supplierData;
+  const norm = (arr, benefit) => {
+    const mn=Math.min(...arr),mx=Math.max(...arr);
+    return arr.map(v=>benefit?(v-mn)/(mx-mn||1):(mx-v)/(mx-mn||1));
+  };
+  const nDefect   = norm(S.map(s=>s.defect), false);
+  const nLead     = norm(S.map(s=>s.leadTime), false);
+  const nMfgLead  = norm(S.map(s=>s.mfgLead), false);
+  const nCost     = norm(S.map(s=>s.cost), false);
+  const nInsp     = norm(S.map(s=>s.inspPass), true);
+
+  const datasets = S.map((s,i)=>({
+    label: s.name,
+    data: [nDefect[i],nLead[i],nMfgLead[i],nCost[i],nInsp[i]].map(v=>parseFloat((v*100).toFixed(1))),
+    backgroundColor: COLORS[i%COLORS.length]+'30',
+    borderColor: COLORS[i%COLORS.length],
+    borderWidth: 2,
+    pointRadius: 3,
+  }));
+
+  step1Charts.push(new Chart(document.getElementById('c-radar'),{
+    type:'radar',
+    data:{labels:['Defect Rate','Lead Time','Mfg Lead Time','Cost','Insp Pass'],datasets},
+    options:{responsive:true,maintainAspectRatio:false,
+      scales:{r:{min:0,max:100,ticks:{display:false},pointLabels:{font:{size:11,family:'Outfit',weight:'500'}}}},
+      plugins:{legend:{position:'bottom',labels:{font:{size:11,family:'Outfit'},boxWidth:10,padding:10}}}
+    }
+  }));
+}
+
+function buildHeatmap() {
+  const S = supplierData;
+  const keys = KEYS;
+  const labels = CRIT_S;
+  const norm = (arr, benefit) => {
+    const mn=Math.min(...arr),mx=Math.max(...arr);
+    return arr.map(v=>benefit?(v-mn)/(mx-mn||1):(mx-v)/(mx-mn||1));
+  };
+  const normData = keys.map((k,i)=>norm(S.map(s=>s[k]),BENEFIT[i]));
+
+  let html='<table style="width:100%;border-collapse:collapse;font-size:11px;">';
+  html+='<thead><tr><th style="padding:6px 8px;text-align:left;color:var(--sub);font-size:10px;background:var(--muted);border:1px solid var(--border)">Criterion</th>';
+  S.forEach(s=>{html+=`<th style="padding:6px 8px;text-align:center;color:var(--sub);font-size:10px;background:var(--muted);border:1px solid var(--border);white-space:nowrap">${s.name}</th>`;});
+  html+='</tr></thead><tbody>';
+
+  labels.forEach((lbl,ci)=>{
+    html+=`<tr><td style="padding:8px;font-weight:600;border:1px solid var(--border);background:var(--muted);font-size:11px;color:var(--text)">${lbl}</td>`;
+    S.forEach((s,si)=>{
+      const v=normData[ci][si];
+      const r=Math.round(255-(v*160));
+      const g=Math.round(100+(v*120));
+      const b=Math.round(100-(v*60));
+      const textColor=v>0.5?'#fff':'#1a1917';
+      html+=`<td style="padding:8px;text-align:center;border:1px solid var(--border);background:rgb(${r},${g},${b});color:${textColor};font-family:'DM Mono',monospace;font-size:11px">${(v*100).toFixed(0)}%</td>`;
+    });
+    html+='</tr>';
+  });
+  html+='</tbody></table>';
+  document.getElementById('heatmap-container').innerHTML=html;
+}
+
+// ═══════════════════════════════════════════════
+// STEP 2: AHP QUESTIONNAIRE
+// ═══════════════════════════════════════════════
+function buildQuestionnaire() {
+  const container = document.getElementById('q-cards-container');
+  let html = '';
+  QUESTIONS.forEach((q,i)=>{
+    html += `<div class="q-card${i===0?' active':''}" id="qcard-${i}">
+      <div class="q-counter">QUESTION ${i+1} OF ${QUESTIONS.length}</div>
+      <div class="q-heading">${q.text}</div>
+      <div class="q-subhead">${q.sub}</div>
+
+      <div class="q-versus">
+        <div class="q-crit left winning" id="qcrit-left-${i}">
+          <div class="q-crit-icon">${CRIT_EMOJI[q.a]}</div>
+          <div class="q-crit-name">${CRIT_S[q.a]}</div>
+        </div>
+        <div class="vs-badge">VS</div>
+        <div class="q-crit right" id="qcrit-right-${i}">
+          <div class="q-crit-icon">${CRIT_EMOJI[q.b]}</div>
+          <div class="q-crit-name">${CRIT_S[q.b]}</div>
+        </div>
+      </div>
+
+      <div class="importance-display">
+        <div class="importance-num" id="qnum-${i}">1</div>
+        <div class="importance-winner" id="qwinner-${i}">${CRIT_S[q.a]} is equally important</div>
+        <div class="importance-desc" id="qdesc-${i}">Equally important</div>
+      </div>
+
+      <div class="slider-section">
+        <div class="slider-labels">
+          <span class="slider-label">← ${CRIT_S[q.a]} dominates</span>
+          <span class="slider-label">Equal</span>
+          <span class="slider-label">${CRIT_S[q.b]} dominates →</span>
+        </div>
+        <input type="range" class="ahp-slider" id="qslider-${i}" min="-8" max="8" step="1" value="0"
+          oninput="updateQ(${i})">
+        <div class="saaty-tick-row">
+          <span class="saaty-tick">9</span><span class="saaty-tick">8</span><span class="saaty-tick">7</span>
+          <span class="saaty-tick">6</span><span class="saaty-tick">5</span><span class="saaty-tick">4</span>
+          <span class="saaty-tick">3</span><span class="saaty-tick">2</span><span class="saaty-tick">1</span>
+          <span class="saaty-tick">2</span><span class="saaty-tick">3</span><span class="saaty-tick">4</span>
+          <span class="saaty-tick">5</span><span class="saaty-tick">6</span><span class="saaty-tick">7</span>
+          <span class="saaty-tick">8</span><span class="saaty-tick">9</span>
+        </div>
+      </div>
+
+      <div class="q-nav">
+        <div class="q-dots" id="qdots-${i}"></div>
+        <div style="display:flex;gap:10px">
+          ${i>0?`<button class="btn" onclick="navQ(${i-1})">← Back</button>`:''}
+          ${i<QUESTIONS.length-1
+            ?`<button class="btn btn-primary" onclick="navQ(${i+1})">Next →</button>`
+            :`<button class="btn btn-success" onclick="showQSummary()">Review answers ✓</button>`}
+        </div>
+      </div>
+    </div>`;
+  });
+  container.innerHTML = html;
+
+  QUESTIONS.forEach((_,i)=>{
+    const dots = document.getElementById('qdots-'+i);
+    let dh='';
+    QUESTIONS.forEach((_,j)=>{
+      const cls = j<i?'done':j===i?'active':'';
+      dh+=`<div class="q-dot ${cls}"></div>`;
+    });
+    dots.innerHTML=dh;
+  });
+}
+
+function updateQ(i) {
+  const raw = parseInt(document.getElementById('qslider-'+i).value);
+  const q = QUESTIONS[i];
+  let saatyVal, winner;
+  if(raw===0){ saatyVal=1; winner=`${CRIT_S[q.a]} & ${CRIT_S[q.b]} are equally important`; }
+  else if(raw<0){ saatyVal=Math.abs(raw)+1; winner=`${CRIT_S[q.a]} is more important`; }
+  else { saatyVal=raw+1; winner=`${CRIT_S[q.b]} is more important`; }
+
+  ahpAnswers[i] = raw<=0 ? saatyVal : 1/saatyVal;
+
+  document.getElementById('qnum-'+i).textContent = saatyVal;
+  document.getElementById('qwinner-'+i).textContent = winner;
+  document.getElementById('qdesc-'+i).textContent = SAATY_DESC[saatyVal];
+
+  const lc = document.getElementById('qcrit-left-'+i);
+  const rc = document.getElementById('qcrit-right-'+i);
+  lc.classList.toggle('winning', raw<=0);
+  rc.classList.toggle('winning', raw>0);
+}
+
+function navQ(idx) {
+  document.querySelectorAll('.q-card').forEach(c=>c.classList.remove('active'));
+  document.getElementById('qcard-'+idx).classList.add('active');
+  currentQ = idx;
+  updateProgress();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function updateProgress() {
+  document.getElementById('q-progress').style.width = ((currentQ+1)/QUESTIONS.length*100)+'%';
+}
+
+function showQSummary() {
+  document.getElementById('q-cards-container').style.display='none';
+  document.getElementById('q-progress').style.width='100%';
+  const body = document.getElementById('q-summary-body');
+  let h='';
+  QUESTIONS.forEach((q,i)=>{
+    const raw = parseInt(document.getElementById('qslider-'+i).value);
+    let saatyVal, winner;
+    if(raw===0){ saatyVal=1; winner='Equal'; }
+    else if(raw<0){ saatyVal=Math.abs(raw)+1; winner=CRIT_S[q.a]; }
+    else { saatyVal=raw+1; winner=CRIT_S[q.b]; }
+    h+=`<tr>
+      <td><span class="chip">${i+1}</span></td>
+      <td>${CRIT_EMOJI[q.a]} ${CRIT_S[q.a]}</td><td style="color:var(--sub)">vs</td>
+      <td>${CRIT_EMOJI[q.b]} ${CRIT_S[q.b]}</td>
+      <td><span class="bdg bg">${saatyVal}</span></td>
+      <td style="font-size:12px;color:var(--sub)">${SAATY_DESC[saatyVal]} — <strong>${winner}</strong></td>
+    </tr>`;
+  });
+  body.innerHTML=h;
+  document.getElementById('q-summary').style.display='block';
+}
+
+function restartQ() {
+  document.getElementById('q-summary').style.display='none';
+  document.getElementById('q-cards-container').style.display='block';
+  navQ(0);
+  ahpAnswers = Array(9).fill(1);
+  QUESTIONS.forEach((_,i)=>{
+    document.getElementById('qslider-'+i).value=0;
+    updateQ(i);
+  });
+}
+
+// ═══════════════════════════════════════════════
+// AHP COMPUTATION
+// ═══════════════════════════════════════════════
+function buildMatrix() {
+  const n=5, M=Array.from({length:n},()=>Array(n).fill(1));
+  QUESTIONS.forEach((q,i)=>{ M[q.a][q.b]=ahpAnswers[i]; M[q.b][q.a]=1/ahpAnswers[i]; });
+  return M;
+}
+
+function computeAHP() {
+  const M = buildMatrix();
+  const n = M.length;
+  const colSums = M[0].map((_,j)=>M.reduce((s,r)=>s+r[j],0));
+  const norm = M.map(row=>row.map((v,j)=>v/colSums[j]));
+  weights = norm.map(row=>row.reduce((s,v)=>s+v,0)/n);
+  const Aw = M.map(row=>row.reduce((s,v,j)=>s+v*weights[j],0));
+  const lm = Aw.reduce((s,v,i)=>s+v/weights[i],0)/n;
+  const CI = (lm-n)/(n-1);
+  const CR = CI/RI[n];
+
+  // CR display
+  document.getElementById('cr-display').innerHTML=`<div class="card"><div class="cr-row">
+    <div><div style="font-size:11px;color:var(--sub);font-weight:500;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">Consistency Ratio (CR)</div>
+    <div style="font-family:'DM Serif Display',serif;font-size:28px;color:var(--ink)">${CR.toFixed(3)}</div></div>
+    <span class="cr-badge ${CR<0.1?'bg':'bb'}">${CR<0.1?'✓ Valid — CR < 0.10':'⚠ Inconsistent — CR ≥ 0.10 · Please revise your answers'}</span>
+    <div style="margin-left:auto;font-size:12px;color:var(--sub)">n = 5 · RI = 1.12</div>
+  </div></div>`;
+
+  // Weight bars
+  const sorted = [...weights.map((w,i)=>({w,i}))].sort((a,b)=>b.w-a.w);
+  let bars='';
+  sorted.forEach((it,r)=>{
+    const p=(it.w*100).toFixed(1);
+    bars+=`<div class="wbar-row">
+      <div class="wbar-lbl">${CRIT_EMOJI[it.i]} ${CRIT[it.i]}</div>
+      <div class="wbar-bg"><div class="wbar-fill" style="width:${p}%"><span class="wbar-pct">${p}%</span></div></div>
+      <div class="wbar-rank">#${r+1}</div>
+    </div>`;
+  });
+  document.getElementById('weight-bars').innerHTML=bars;
+
+  // Matrix
+  let mh='<table class="mtx"><thead><tr><th></th>'+ABBR.map(a=>`<th>${a}</th>`).join('')+'</tr></thead><tbody>';
+  M.forEach((row,i)=>{
+    mh+=`<tr><th>${ABBR[i]}</th>`;
+    row.forEach((v,j)=>{
+      const d=i===j?'1':(v>=1?v.toFixed(2):'1/'+Math.round(1/v));
+      mh+=`<td${i===j?' class="mtx-d"':''}>${d}</td>`;
+    });
+    mh+='</tr>';
+  });
+  mh+='</tbody></table>';
+  document.getElementById('matrix-display').innerHTML=mh;
+  goTo(3);
+}
+
+// ═══════════════════════════════════════════════
+// TOPSIS
+// ═══════════════════════════════════════════════
+function computeTOPSIS() {
+  const S = supplierData;
+  const X = S.map(s=>KEYS.map(k=>s[k]));
+  const colNorm = KEYS.map((_,j)=>Math.sqrt(X.reduce((s,r)=>s+r[j]*r[j],0)));
+  const R = X.map(row=>row.map((v,j)=>v/(colNorm[j]||1)));
+  const V = R.map(row=>row.map((v,j)=>v*weights[j]));
+  const PIS = CRIT.map((_,j)=>BENEFIT[j]?Math.max(...V.map(r=>r[j])):Math.min(...V.map(r=>r[j])));
+  const NIS = CRIT.map((_,j)=>BENEFIT[j]?Math.min(...V.map(r=>r[j])):Math.max(...V.map(r=>r[j])));
+  const Dp  = V.map(row=>Math.sqrt(row.reduce((s,v,j)=>s+(v-PIS[j])**2,0)));
+  const Dm  = V.map(row=>Math.sqrt(row.reduce((s,v,j)=>s+(v-NIS[j])**2,0)));
+  const Ci  = Dp.map((dp,i)=>Dm[i]/(dp+Dm[i]));
+  const scores = V.map((row,i)=>row.map((v,j)=>weights[j]*( BENEFIT[j]?(supplierData[i][KEYS[j]]-Math.min(...S.map(s=>s[KEYS[j]])))/(Math.max(...S.map(s=>s[KEYS[j]]))-Math.min(...S.map(s=>s[KEYS[j]]))||1):(Math.max(...S.map(s=>s[KEYS[j]]))-supplierData[i][KEYS[j]])/(Math.max(...S.map(s=>s[KEYS[j]]))-Math.min(...S.map(s=>s[KEYS[j]]))||1) )));
+
+  topsisResult = {V,PIS,NIS,Dp,Dm,Ci,scores};
+
+  const ranked=[...Ci.map((c,i)=>({c,i,s:S[i],dp:Dp[i],dm:Dm[i],sc:scores[i]}))].sort((a,b)=>b.c-a.c);
+  const top=ranked[0];
+
+  document.getElementById('dban').innerHTML=`<div class="dban">
+    <div class="dico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+    <div><div class="dtitle">Recommended: ${top.s.name}</div>
+    <div class="dsub">Closeness coefficient Ci = ${top.c.toFixed(4)} · Highest similarity to ideal best supplier across all weighted KPIs</div></div>
+  </div>`;
+
+  document.getElementById('smets').innerHTML=`
+    <div class="mcard"><div class="mlbl">Top supplier Ci</div><div class="mval">${ranked[0].c.toFixed(3)}</div></div>
+    <div class="mcard"><div class="mlbl">Gap to 2nd</div><div class="mval">${(ranked[0].c-ranked[1].c).toFixed(3)}</div></div>
+    <div class="mcard"><div class="mlbl">Suppliers ranked</div><div class="mval">${S.length}</div></div>`;
+
+  const mc=['m1','m2','m3','mn','mn','mn','mn'];
+  const ml=['1st','2nd','3rd','4th','5th','6th','7th'];
+  let rt='<thead><tr><th>Rank</th><th>Supplier</th><th>SKUs</th><th>Ci score</th><th>D⁺</th><th>D⁻</th></tr></thead><tbody>';
+  ranked.forEach((r,pos)=>{
+    rt+=`<tr><td><span class="medal ${mc[pos]}">${ml[pos]}</span></td>
+      <td style="font-weight:${pos===0?600:400}">${r.s.name}</td>
+      <td><span class="chip">${r.s.skus}</span></td>
+      <td><span class="sbar" style="width:${Math.round(r.c*80)}px"></span><strong>${r.c.toFixed(4)}</strong></td>
+      <td style="font-size:12px;color:var(--sub);font-family:'DM Mono',monospace">${r.dp.toFixed(5)}</td>
+      <td style="font-size:12px;color:var(--sub);font-family:'DM Mono',monospace">${r.dm.toFixed(5)}</td></tr>`;
+  });
+  rt+='</tbody>';
+  document.getElementById('rank-tbl').innerHTML=rt;
+
+  resultCharts.forEach(c=>{try{c.destroy();}catch(e){}});
+  resultCharts=[];
+
+  resultCharts.push(new Chart(document.getElementById('ciChart'),{
+    type:'bar',data:{labels:ranked.map(r=>r.s.name),datasets:[{label:'Ci',data:ranked.map(r=>parseFloat(r.c.toFixed(4))),backgroundColor:ranked.map((_,i)=>i===0?COLORS[2]:COLORS[0]+'80'),borderColor:ranked.map((_,i)=>i===0?COLORS[2]:COLORS[0]),borderWidth:2,borderRadius:6}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{min:0,max:1,ticks:{callback:v=>v.toFixed(2),font:{size:10}}},y:{ticks:{font:{size:11,family:'Outfit'}}}}}
+  }));
+
+  resultCharts.push(new Chart(document.getElementById('distChart'),{
+    type:'bar',data:{labels:ranked.map(r=>r.s.name),datasets:[
+      {label:'D⁺ to ideal best',data:ranked.map(r=>parseFloat(r.dp.toFixed(5))),backgroundColor:COLORS[1]+'90',borderColor:COLORS[1],borderWidth:2,borderRadius:4},
+      {label:'D⁻ to ideal worst',data:ranked.map(r=>parseFloat(r.dm.toFixed(5))),backgroundColor:COLORS[2]+'90',borderColor:COLORS[2],borderWidth:2,borderRadius:4}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'bottom',labels:{font:{size:11,family:'Outfit'},boxWidth:10}}},scales:{x:{ticks:{font:{size:10,family:'Outfit'}}},y:{ticks:{font:{size:10,family:'DM Mono'}}}}}
+  }));
+
+  const breakDs = CRIT_S.map((c,ci)=>({
+    label:c,data:ranked.map(r=>parseFloat((r.sc[ci]*100).toFixed(2))),
+    backgroundColor:COLORS[ci]+'90',borderColor:COLORS[ci],borderWidth:1,borderRadius:3
+  }));
+  resultCharts.push(new Chart(document.getElementById('breakChart'),{
+    type:'bar',data:{labels:ranked.map(r=>r.s.name),datasets:breakDs},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'bottom',labels:{font:{size:11,family:'Outfit'},boxWidth:10,padding:12}}},
+      scales:{x:{stacked:true,ticks:{font:{size:11,family:'Outfit'}}},y:{stacked:true,ticks:{font:{size:10,family:'DM Mono'},callback:v=>v+'%'},grid:{color:'rgba(0,0,0,.05)'}}}}
+  }));
+}
+
+// ═══════════════════════════════════════════════
+// RESET
+// ═══════════════════════════════════════════════
+function resetAll() {
+  supplierData=[]; ahpAnswers=Array(9).fill(1); currentQ=0; weights=[]; topsisResult=null;
+  resultCharts.forEach(c=>{try{c.destroy();}catch(e){}});
+  step1Charts.forEach(c=>{try{c.destroy();}catch(e){}});
+  resultCharts=[]; step1Charts=[];
+  document.getElementById('data-section').style.display='none';
+  document.getElementById('upload-zone').style.display='block';
+  document.getElementById('q-summary').style.display='none';
+  document.getElementById('q-cards-container').style.display='block';
+  buildQuestionnaire();
+  goTo(1);
+}
+
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+buildQuestionnaire();
+</script>
+</body>
+</html>
