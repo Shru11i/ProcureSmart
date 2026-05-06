@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProcureIQ — Supplier Decision Platform</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#0E0F0C;--ink2:#4A4B47;--ink3:#9A9B96;
+  --paper:#F7F6F2;--paper2:#EEECEA;--paper3:#E2DFD9;
+  --accent:#1A6B3C;--accent2:#D0EDD9;--accent3:#0D4526;--accenth:rgba(26,107,60,0.1);
+  --warn:#B84A12;--blue:#1B4F8A;--blue2:#D8E8F7;
+  --gold:#8A5E0E;--purple:#5C3A8A;
+  --border:rgba(14,15,12,0.09);--border2:rgba(14,15,12,0.16);
+  --r:10px;--rl:16px;
+  --sh:0 1px 4px rgba(14,15,12,0.06),0 4px 16px rgba(14,15,12,0.06);
+  --font:'DM Sans',sans-serif;--serif:'DM Serif Display',serif;
+}
+body{font-family:var(--font);background:var(--paper);color:var(--ink);min-height:100vh;overflow-x:hidden}
+.topbar{background:var(--ink);padding:0 32px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200}
+.tb-left{display:flex;align-items:center;gap:10px}
+.tb-logo{width:30px;height:30px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center}
+.tb-logo svg{width:15px;height:15px;fill:none;stroke:#fff;stroke-width:2.2}
+.tb-name{font-family:var(--serif);font-size:18px;color:#fff}
+.tb-tag{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.38);background:rgba(255,255,255,.07);border-radius:4px;padding:3px 8px}
+.tb-meta{font-size:11px;color:rgba(255,255,255,.38)}
+.step-track{background:#18190F;border-bottom:1px solid rgba(255,255,255,.07);padding:0 32px;display:flex}
+.stp{display:flex;align-items:center;padding:16px 0}
+.stp-inner{display:flex;align-items:center;gap:9px}
+.stp-num{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;background:rgba(255,255,255,.1);color:rgba(255,255,255,.38);flex-shrink:0;transition:all .3s}
+.stp-lbl{font-size:12px;font-weight:500;color:rgba(255,255,255,.38);white-space:nowrap;transition:all .3s}
+.stp-line{width:48px;height:1px;background:rgba(255,255,255,.1);margin:0 14px;flex-shrink:0}
+.stp:last-child .stp-line{display:none}
+.stp.active .stp-num{background:var(--accent);color:#fff}
+.stp.active .stp-lbl{color:#fff;font-weight:600}
+.stp.done .stp-num{background:rgba(26,107,60,.4);color:var(--accent2)}
+.stp.done .stp-lbl{color:rgba(255,255,255,.5)}
+.main{max-width:1040px;margin:0 auto;padding:36px 24px 100px}
+.sec{display:none}.sec.active{display:block}
+.sec-hdr{margin-bottom:32px}
+.sec-badge{display:inline-flex;align-items:center;gap:6px;background:var(--accent2);border-radius:20px;padding:4px 12px;font-size:10px;font-weight:700;color:var(--accent3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px}
+.sec-h1{font-family:var(--serif);font-size:30px;color:var(--ink);line-height:1.18;margin-bottom:7px}
+.sec-h1 em{font-style:italic;color:var(--accent)}
+.sec-sub{font-size:14px;color:var(--ink2);line-height:1.7;max-width:640px}
+.card{background:#fff;border:1px solid var(--border);border-radius:var(--rl);padding:1.25rem 1.5rem;margin-bottom:14px;box-shadow:var(--sh)}
+.ct{font-size:11px;font-weight:700;color:var(--ink3);margin-bottom:1rem;display:flex;align-items:center;gap:7px;text-transform:uppercase;letter-spacing:.07em}
+.ct svg{width:13px;height:13px;flex-shrink:0}
+.ct-accent{color:var(--accent)}.ct-blue{color:var(--blue)}.ct-gold{color:var(--gold)}.ct-warn{color:var(--warn)}.ct-purple{color:var(--purple)}
+.stat-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px}
+.stat{background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh);position:relative;overflow:hidden}
+.stat::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.stat.s-green::before{background:var(--accent)}.stat.s-blue::before{background:var(--blue)}
+.stat.s-warn::before{background:var(--warn)}.stat.s-gold::before{background:var(--gold)}.stat.s-purple::before{background:var(--purple)}
+.stat-val{font-family:var(--serif);font-size:28px;color:var(--ink);line-height:1}
+.stat-lbl{font-size:10px;font-weight:700;color:var(--ink3);margin-top:5px;text-transform:uppercase;letter-spacing:.05em}
+.stat-note{font-size:11px;color:var(--ink3);margin-top:3px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.cw{position:relative;width:100%}
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{padding:8px 12px;text-align:left;color:var(--ink3);font-weight:700;border-bottom:1px solid var(--border);font-size:10px;text-transform:uppercase;letter-spacing:.06em}
+.tbl td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--ink)}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:var(--paper)}
+.tn{font-weight:600;font-size:13px}
+.bdg{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600}
+.bg{background:#CEEBD8;color:#16512B}.bw{background:#FAE5CC;color:#843508}.bb{background:#FAD5D5;color:#861414}
+.chip{background:var(--paper2);color:var(--ink2);border-radius:5px;padding:2px 8px;font-size:11px;font-weight:500}
+.loc-chip{background:var(--blue2);color:var(--blue);border-radius:5px;padding:2px 8px;font-size:11px;font-weight:500}
+.ov{overflow-x:auto}
+.hm-tbl{width:100%;border-collapse:collapse;font-size:12px}
+.hm-tbl th{padding:9px 12px;text-align:center;color:var(--ink3);font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border-bottom:1px solid var(--border);border-right:1px solid var(--border)}
+.hm-tbl th:first-child{text-align:left}
+.hm-tbl td{padding:12px 10px;text-align:center;border-bottom:1px solid var(--border);border-right:1px solid var(--border)}
+.hm-tbl td:first-child{text-align:left;padding-left:14px;font-weight:600;font-size:13px}
+.hm-cell-val{font-size:13px;font-weight:700}.hm-cell-sub{font-size:9px;margin-top:2px;opacity:.6}
+.btn{padding:10px 22px;font-size:13px;font-weight:600;border-radius:var(--r);border:1.5px solid var(--border2);background:#fff;color:var(--ink);cursor:pointer;transition:all .15s;font-family:var(--font);letter-spacing:.01em;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{background:var(--paper2);transform:translateY(-1px);box-shadow:var(--sh)}
+.btn:active{transform:scale(.98)}
+.btn svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.2}
+.btna{background:var(--accent);color:#fff;border-color:var(--accent)}.btna:hover{background:var(--accent3)}
+.btnk{background:var(--ink);color:#fff;border-color:var(--ink)}.btnk:hover{background:#2c2d26}
+.brow{display:flex;gap:10px;justify-content:flex-end;margin-top:1.5rem}
+
+/* ===== AHP QUESTIONNAIRE ===== */
+.q-prog-wrap{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+.q-prog-lbl{font-size:11px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em}
+.q-prog-track{background:var(--paper3);border-radius:4px;height:5px;flex:1;margin:0 14px;overflow:hidden}
+.q-prog-fill{height:100%;background:linear-gradient(90deg,var(--accent),#4CBF80);border-radius:4px;transition:width .45s cubic-bezier(.4,0,.2,1)}
+.q-prog-count{font-size:12px;font-weight:700;color:var(--accent)}
+.q-slide{display:none;animation:qIn .32s ease}.q-slide.active{display:block}
+@keyframes qIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.q-label{font-size:10px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px}
+.q-text{font-family:var(--serif);font-size:21px;color:var(--ink);line-height:1.35;margin-bottom:24px}
+.q-text strong{color:var(--accent)}
+
+/* Option labels */
+.q-opts-row{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:2px}
+.q-opt{font-family:var(--serif);font-style:italic;font-size:15px;color:var(--ink);line-height:1.2}
+.q-opt-sub{display:block;font-family:var(--font);font-style:normal;font-size:10px;color:var(--ink3);margin-top:2px}
+.q-opt.right{text-align:right}
+.q-mid-row{display:grid;grid-template-columns:1fr 1fr 1fr;margin-bottom:2px}
+.q-mid-cell{font-family:var(--serif);font-style:italic;font-size:12px;color:var(--ink2);text-align:center;line-height:1.3}
+.q-mid-cell:first-child{text-align:left}.q-mid-cell:last-child{text-align:right}
+
+/* Ruler + slider */
+.q-ruler{position:relative;height:40px;display:flex;align-items:center}
+.q-ruler-line{position:absolute;left:0;right:0;height:3px;background:var(--ink)}
+.q-ticks{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);display:flex;justify-content:space-between;pointer-events:none}
+.q-tick{width:2px;background:var(--ink);flex-shrink:0;transition:background .2s}
+.q-tick.short{height:14px}.q-tick.tall{height:24px}
+.q-slider{position:relative;z-index:2;width:100%;-webkit-appearance:none;appearance:none;height:3px;background:transparent;outline:none;cursor:pointer;margin:0}
+.q-slider::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:#fff;border:2.5px solid var(--ink);cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.2);transition:transform .15s,box-shadow .15s}
+.q-slider::-webkit-slider-thumb:hover{transform:scale(1.18);box-shadow:0 4px 16px rgba(0,0,0,.28)}
+.q-slider::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:#fff;border:2.5px solid var(--ink);cursor:pointer}
+.q-nums{display:flex;justify-content:space-between;padding:5px 0 0}
+.q-num{font-size:11px;font-weight:600;color:var(--ink2);text-align:center;flex:1}
+.q-num.centre{font-size:14px;font-weight:700;color:var(--ink)}
+
+/* 5-point clickable scale */
+
+
+
+
+
+
+
+
+
+
+
+/* Answer feedback */
+.q-answer{margin-top:14px;border:1px solid var(--border);border-radius:var(--r);padding:14px 18px;display:flex;align-items:center;gap:14px;transition:all .2s}
+.q-answer.ans-left{background:var(--accenth);border-color:rgba(26,107,60,.25)}
+.q-answer.ans-right{background:var(--blue2);border-color:rgba(27,79,138,.25)}
+.q-answer.ans-equal{background:var(--paper2);border-color:var(--border2)}
+.q-ans-icon{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;font-size:17px}
+.q-ans-label{font-size:14px;font-weight:700;color:var(--ink)}
+.q-ans-sub{font-size:11px;color:var(--ink3);margin-top:2px}
+.q-nav-row{display:flex;justify-content:space-between;align-items:center;margin-top:20px}
+.q-dots{display:flex;gap:4px;flex-wrap:wrap;max-width:260px}
+.q-dot{width:7px;height:7px;border-radius:50%;background:var(--paper3);cursor:pointer;transition:all .2s}
+.q-dot.active{background:var(--ink);transform:scale(1.3)}.q-dot.done{background:var(--accent)}
+
+/* Weight bars */
+.wbar{display:flex;align-items:center;gap:10px;margin-bottom:11px}
+.wbar-lbl{font-size:12px;color:var(--ink);min-width:190px;font-weight:500}
+.wbar-track{flex:1;height:22px;background:var(--paper2);border-radius:5px;overflow:hidden}
+.wbar-fill{height:100%;border-radius:5px;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;transition:width .7s cubic-bezier(.4,0,.2,1)}
+.wbar-pct{font-size:10px;color:#fff;font-weight:700}
+.wbar-rank{font-size:11px;color:var(--ink3);min-width:22px;text-align:right;font-weight:700}
+.mtx{width:100%;border-collapse:collapse;font-size:11px}
+.mtx th,.mtx td{padding:7px 10px;border:1px solid var(--border);text-align:center}
+.mtx th{background:var(--paper2);font-weight:700;color:var(--ink2);font-size:10px}
+.mtx-d{background:var(--paper);color:var(--ink3)}
+.mgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px}
+.mcard{background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:16px 20px;box-shadow:var(--sh)}
+.mlbl{font-size:10px;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em;font-weight:700;margin-bottom:5px}
+.mval{font-family:var(--serif);font-size:26px;color:var(--ink)}
+.medal{width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0}
+.m1{background:#FDE8C0;color:#7A4800}.m2{background:#DDD9D2;color:#4A4844}.m3{background:#F4D8CC;color:#7A2D10}.mn{background:var(--paper2);color:var(--ink3)}
+.sbar{height:5px;border-radius:3px;background:var(--accent);display:inline-block;vertical-align:middle;margin-right:6px}
+.dban{background:linear-gradient(120deg,#E8F6EE,#F3FBF6);border:1.5px solid #A8DFC0;border-radius:var(--rl);padding:1.5rem;display:flex;align-items:center;gap:18px;margin-bottom:16px;box-shadow:0 4px 24px rgba(26,107,60,.1)}
+.dico{width:52px;height:52px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 6px 18px rgba(26,107,60,.35)}
+.dico svg{width:24px;height:24px;fill:none;stroke:#fff;stroke-width:2.5}
+.dtitle{font-family:var(--serif);font-size:20px;color:var(--accent3);margin-bottom:3px}
+.dsub{font-size:13px;color:var(--accent);line-height:1.5}
+.cr-pill{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700}
+.cr-ok{background:#CEEBD8;color:#16512B}.cr-bad{background:#FAD5D5;color:#861414}
+@media(max-width:700px){
+  .stat-row{grid-template-columns:1fr 1fr}.grid-2{grid-template-columns:1fr}
+  .mgrid{grid-template-columns:1fr 1fr}.step-track{padding:0 16px}.stp-line{width:20px;margin:0 6px}
+  
+}
+
+/* ===== REVIEW PANEL ===== */
+.review-panel{display:none;animation:qIn .32s ease}
+.review-panel.active{display:block}
+.review-title{font-family:var(--serif);font-size:22px;color:var(--ink);margin-bottom:4px}
+.review-sub{font-size:13px;color:var(--ink2);margin-bottom:20px;line-height:1.6}
+.review-row{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--border);border-radius:var(--r);margin-bottom:8px;background:#fff;box-shadow:var(--sh);transition:background .15s}
+.review-row:hover{background:var(--paper)}
+.review-qnum{font-size:10px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em;min-width:26px}
+.review-crits{flex:1;font-size:12px;color:var(--ink2)}
+.review-crits strong{color:var(--ink);font-weight:600}
+.review-answer{display:flex;align-items:center;gap:7px;min-width:220px}
+.review-chip{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.rc-left{background:var(--accent2);color:var(--accent3)}
+.rc-right{background:var(--blue2);color:var(--blue)}
+.rc-equal{background:var(--paper2);color:var(--ink2)}
+.review-edit{padding:5px 12px;font-size:11px;font-weight:600;border:1.5px solid var(--border2);border-radius:6px;background:#fff;cursor:pointer;color:var(--ink);transition:all .15s;font-family:var(--font);display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.review-edit:hover{background:var(--paper2);border-color:var(--accent);color:var(--accent)}
+.review-edit svg{width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:2.5}
+.review-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="tb-left">
+    <div class="tb-logo"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
+    <span class="tb-name">ProcureIQ</span>
+    <span class="tb-tag">TOPSIS + AHP</span>
+  </div>
+  <span class="tb-meta">5 Suppliers · 100 SKUs · India Supply Chain</span>
+</div>
+
+<div class="step-track">
+  <div class="stp active" id="nav-1"><div class="stp-inner"><div class="stp-num">1</div><div class="stp-lbl">Explore Data</div></div><div class="stp-line"></div></div>
+  <div class="stp" id="nav-2"><div class="stp-inner"><div class="stp-num">2</div><div class="stp-lbl">AHP Questionnaire</div></div><div class="stp-line"></div></div>
+  <div class="stp" id="nav-3"><div class="stp-inner"><div class="stp-num">3</div><div class="stp-lbl">TOPSIS Matrix</div></div><div class="stp-line"></div></div>
+  <div class="stp" id="nav-4"><div class="stp-inner"><div class="stp-num">4</div><div class="stp-lbl">Decision</div></div><div class="stp-line"></div></div>
+</div>
+
+<div class="main">
+
+<!-- STEP 1 -->
+<div class="sec active" id="sec-1">
+  <div class="sec-hdr">
+    <div class="sec-badge"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Dataset · 100 SKUs</div>
+    <div class="sec-h1">Supplier performance<br><em>intelligence dashboard</em></div>
+    <div class="sec-sub">Aggregated KPI data across 5 Indian suppliers covering defect rates, lead times, manufacturing costs, and quality inspection results. Explore patterns before setting your criteria weights.</div>
+  </div>
+  <div class="stat-row">
+    <div class="stat s-green"><div class="stat-val">5</div><div class="stat-lbl">Suppliers</div><div class="stat-note">Kolkata · Delhi · Chennai</div></div>
+    <div class="stat s-blue"><div class="stat-val">100</div><div class="stat-lbl">SKUs Analysed</div><div class="stat-note">Across all suppliers</div></div>
+    <div class="stat s-warn"><div class="stat-val">2.33%</div><div class="stat-lbl">Avg Defect Rate</div><div class="stat-note">Lower is better ↓</div></div>
+    <div class="stat s-gold"><div class="stat-val">41.5%</div><div class="stat-lbl">Avg Insp Pass</div><div class="stat-note">Higher is better ↑</div></div>
+    <div class="stat s-purple"><div class="stat-val">S1</div><div class="stat-lbl">Best Quality</div><div class="stat-note">Lowest defect 1.804%</div></div>
+  </div>
+  <div class="card"><div class="ct"><svg viewBox="0 0 24 24" class="ct-accent"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>Supplier KPI overview — aggregated averages</div><div class="ov"><table class="tbl" id="sup-tbl"></table></div></div>
+  <div class="grid-2">
+    <div class="card"><div class="ct"><svg viewBox="0 0 24 24" class="ct-warn"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Average defect rate by supplier</div><div class="cw" style="height:210px"><canvas id="c-defect"></canvas></div></div>
+    <div class="card"><div class="ct"><svg viewBox="0 0 24 24" class="ct-accent"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Inspection pass rate (%)</div><div class="cw" style="height:210px"><canvas id="c-insp"></canvas></div></div>
+  </div>
+  <div class="grid-2">
+    <div class="card"><div class="ct"><svg viewBox="0 0 24 24" class="ct-blue"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Lead time vs manufacturing lead time (days)</div><div class="cw" style="height:210px"><canvas id="c-lead"></canvas></div></div>
+    <div class="card"><div class="ct"><svg viewBox="0 0 24 24" class="ct-gold"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>Manufacturing cost comparison</div><div class="cw" style="height:210px"><canvas id="c-cost"></canvas></div></div>
+  </div>
+  <div class="card"><div class="ct"><svg viewBox="0 0 24 24" class="ct-purple"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Multi-KPI radar — normalised performance fingerprint (higher = better)</div><div class="cw" style="height:320px"><canvas id="c-radar"></canvas></div></div>
+  <div class="grid-2">
+    <div class="card"><div class="ct"><svg viewBox="0 0 24 24" class="ct-blue"><circle cx="9" cy="9" r="3"/><circle cx="15" cy="15" r="3"/></svg>Cost vs defect rate scatter</div><div class="cw" style="height:240px"><canvas id="c-scatter"></canvas></div></div>
+    <div class="card"><div class="ct"><svg viewBox="0 0 24 24" class="ct-gold"><path d="M21.21 15.89A10 10 0 118 2.83"/><path d="M22 12A10 10 0 0012 2v10z"/></svg>Default AHP weight distribution (preview)</div><div class="cw" style="height:240px"><canvas id="c-donut"></canvas></div></div>
+  </div>
+  <div class="card"><div class="ct"><svg viewBox="0 0 24 24" class="ct-accent"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>Performance heatmap — normalised scores across all KPIs</div><div id="heatmap-wrap"></div></div>
+  <div class="brow"><button class="btn btna" onclick="goTo(2)">Begin AHP questionnaire <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button></div>
+</div>
+
+<!-- STEP 2 -->
+<div class="sec" id="sec-2">
+  <div class="sec-hdr">
+    <div class="sec-badge"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Step 2 — AHP Pairwise</div>
+    <div class="sec-h1">Criteria importance<br><em>questionnaire</em></div>
+    <div class="sec-sub">Answer all 10 pairwise comparison questions. Move the slider toward the criterion you consider more important — or click one of the five scale buttons below the ruler. Slide further from centre for stronger preference.</div>
+  </div>
+  <div class="card">
+    <div class="q-prog-wrap">
+      <span class="q-prog-lbl">Progress</span>
+      <div class="q-prog-track"><div class="q-prog-fill" id="q-prog" style="width:0%"></div></div>
+      <span class="q-prog-count" id="q-count">1 / 10</span>
+    </div>
+    <div id="q-container"></div>
+    <div class="q-nav-row" style="justify-content:center">
+      <div class="q-dots" id="q-dots"></div>
+    </div>
+  </div>
+
+  <!-- REVIEW PANEL -->
+  <div class="review-panel" id="review-panel">
+    <div class="review-title">Review your answers</div>
+    <div class="review-sub">Check your pairwise preferences below. Click <strong>Edit</strong> on any row to adjust that answer, then come back to finalise.</div>
+    <div id="review-rows"></div>
+    <div class="review-actions">
+      <button class="btn" onclick="backToQuestionnaire()"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>Back to questions</button>
+      <button class="btn btnk" onclick="computeAll()">Confirm &amp; calculate <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></button>
+    </div>
+  </div>
+  <div class="brow">
+    <button class="btn" onclick="goTo(1)"><svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>Back</button>
+  </div>
+</div>
+
+<!-- STEP 3 -->
+<div class="sec" id="sec-3">
+  <div class="sec-hdr">
+    <div class="sec-badge">Step 3 — Computation</div>
+    <div class="sec-h1">TOPSIS <em>audit trail</em></div>
+    <div class="sec-sub">Full computation trail — AHP-derived weights, normalised weighted decision matrix, ideal solutions, and distance scores.</div>
+  </div>
+  <div class="card"><div class="ct"><svg viewBox="0 0 24 24" class="ct-accent"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>AHP-derived criterion weights &amp; consistency check</div><div id="weight-bars" style="margin-bottom:14px"></div><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><span style="font-size:12px;color:var(--ink2);font-weight:500">Consistency Ratio (CR):</span><span class="cr-pill" id="cr-pill"></span><span style="font-size:11px;color:var(--ink3)">n = 5 criteria · RI = 1.12 · valid if CR &lt; 0.10</span></div></div>
+  <div class="card"><div class="ct"><svg viewBox="0 0 24 24" class="ct-blue"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>Pairwise comparison matrix (AHP input)</div><div class="ov" id="ahp-matrix"></div></div>
+  <div class="card"><div class="ct"><svg viewBox="0 0 24 24" class="ct-accent"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>Normalised weighted decision matrix (V)</div><div class="ov" id="norm-matrix"></div></div>
+  <div class="card"><div class="ct"><svg viewBox="0 0 24 24" class="ct-gold"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>PIS (ideal best) &amp; NIS (ideal worst)</div><div class="ov" id="ideal-table"></div></div>
+  <div class="card"><div class="ct"><svg viewBox="0 0 24 24" class="ct-accent"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Distance scores &amp; closeness coefficient (Ci)</div><div class="ov" id="dist-table"></div></div>
+  <div class="brow">
+    <button class="btn" onclick="goTo(2)"><svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>Adjust answers</button>
+    <button class="btn btna" onclick="goTo(4)">View decision <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+  </div>
+</div>
+
+<!-- STEP 4 -->
+<div class="sec" id="sec-4">
+  <div class="sec-hdr">
+    <div class="sec-badge"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Final Recommendation</div>
+    <div class="sec-h1">Procurement <em>decision</em></div>
+    <div class="sec-sub">Suppliers ranked by TOPSIS closeness coefficient Ci. Score of 1.0 = ideal supplier. Weights derived from your AHP questionnaire responses.</div>
+  </div>
+  <div id="dban"></div>
+  <div class="mgrid" id="smets"></div>
+  <div class="card"><div class="ct"><svg viewBox="0 0 24 24" class="ct-accent"><polyline points="20 6 9 17 4 12"/></svg>Supplier ranking — TOPSIS closeness coefficient (Ci)</div><div class="ov"><table class="tbl" id="rank-tbl"></table></div></div>
+  <div class="grid-2">
+    <div class="card"><div class="ct"><svg viewBox="0 0 24 24" class="ct-accent"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Closeness coefficient by supplier</div><div class="cw" style="height:230px"><canvas id="ci-chart"></canvas></div></div>
+    <div class="card"><div class="ct"><svg viewBox="0 0 24 24" class="ct-warn"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>D⁺ vs D⁻ distance comparison</div><div class="cw" style="height:230px"><canvas id="dist-chart"></canvas></div></div>
+  </div>
+  <div class="card"><div class="ct"><svg viewBox="0 0 24 24" class="ct-blue"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>Weighted score contribution by criterion</div><div class="cw" style="height:260px"><canvas id="contrib-chart"></canvas></div></div>
+  <div class="brow">
+    <button class="btn" onclick="goTo(3)"><svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>TOPSIS trail</button>
+    <button class="btn" onclick="goTo(1)">Start over</button>
+  </div>
+</div>
+
+</div>
+<script>
+const SUPPLIERS=[
+  {name:"Supplier 1",location:"Kolkata",skus:27,defect:1.804,leadTime:14.8,mfgLead:12.6,cost:45.3,inspPass:63.0},
+  {name:"Supplier 2",location:"Delhi",  skus:22,defect:2.363,leadTime:18.5,mfgLead:15.6,cost:41.6,inspPass:43.2},
+  {name:"Supplier 3",location:"Chennai",skus:15,defect:2.466,leadTime:20.1,mfgLead:14.9,cost:43.6,inspPass:46.7},
+  {name:"Supplier 4",location:"Kolkata",skus:18,defect:2.337,leadTime:15.2,mfgLead:15.3,cost:62.7,inspPass:16.7},
+  {name:"Supplier 5",location:"Chennai",skus:18,defect:2.665,leadTime:18.1,mfgLead:16.3,cost:44.8,inspPass:38.9},
+];
+const CRIT=["Defect Rate %","Lead Time (days)","Mfg Lead Time (days)","Mfg Cost","Insp Pass %"];
+const CRIT_S=["Defect Rate","Lead Time","Mfg Lead Time","Cost","Insp Pass"];
+const KEYS=["defect","leadTime","mfgLead","cost","inspPass"];
+const BENEFIT=[false,false,false,false,true];
+const RI=[0,0,0,0.58,0.90,1.12];
+const PAL=["#1A6B3C","#1B4F8A","#B84A12","#9A6A10","#5C3A8A"];
+const PAL_A=["rgba(26,107,60,.12)","rgba(27,79,138,.12)","rgba(184,74,18,.12)","rgba(154,106,16,.12)","rgba(92,58,138,.12)"];
+
+// 10 questions — all C(5,2) pairs
+// a,b = criterion indices: 0=Defect,1=LeadTime,2=MfgLead,3=Cost,4=InspPass
+const QS=[
+  {a:0,b:1,la:"Defect Rate",          lb:"Lead Time",              lsub:"Quality control",   rsub:"Delivery speed",   q:"Which is more important for supplier evaluation: <strong>Defect Rate</strong> or <strong>Lead Time</strong>?"},
+  {a:0,b:2,la:"Defect Rate",          lb:"Manufacturing Lead Time",lsub:"Quality control",   rsub:"Production cycle", q:"Which is more important: <strong>Defect Rate</strong> or <strong>Manufacturing Lead Time</strong>?"},
+  {a:0,b:3,la:"Defect Rate",          lb:"Cost",                   lsub:"Quality control",   rsub:"Financial",        q:"Which is more important: <strong>Defect Rate</strong> or <strong>Cost</strong>?"},
+  {a:0,b:4,la:"Defect Rate",          lb:"Inspection Pass Rate",   lsub:"Quality control",   rsub:"Quality gate",     q:"Which is more important: <strong>Defect Rate</strong> or <strong>Inspection Pass Rate</strong>?"},
+  {a:1,b:2,la:"Lead Time",            lb:"Manufacturing Lead Time",lsub:"Delivery speed",    rsub:"Production cycle", q:"Which is more important: <strong>Lead Time</strong> or <strong>Manufacturing Lead Time</strong>?"},
+  {a:1,b:3,la:"Lead Time",            lb:"Cost",                   lsub:"Delivery speed",    rsub:"Financial",        q:"Which is more important: <strong>Lead Time</strong> or <strong>Cost</strong>?"},
+  {a:1,b:4,la:"Lead Time",            lb:"Inspection Pass Rate",   lsub:"Delivery speed",    rsub:"Quality gate",     q:"Which is more important: <strong>Lead Time</strong> or <strong>Inspection Pass Rate</strong>?"},
+  {a:2,b:3,la:"Manufacturing Lead Time",lb:"Cost",                 lsub:"Production cycle",  rsub:"Financial",        q:"Which is more important: <strong>Manufacturing Lead Time</strong> or <strong>Cost</strong>?"},
+  {a:2,b:4,la:"Manufacturing Lead Time",lb:"Inspection Pass Rate", lsub:"Production cycle",  rsub:"Quality gate",     q:"Which is more important: <strong>Manufacturing Lead Time</strong> or <strong>Inspection Pass Rate</strong>?"},
+  {a:3,b:4,la:"Cost",                 lb:"Inspection Pass Rate",   lsub:"Financial",         rsub:"Quality gate",     q:"Which is more important: <strong>Cost</strong> or <strong>Inspection Pass Rate</strong>?"},
+];
+
+// Slider 0-8, centre=4=Equal
+// Positions: 0=A:9, 1=A:7, 2=A:5, 3=A:3, 4=Equal(1), 5=B:3, 6=B:5, 7=B:7, 8=B:9
+const SAATY_MAP=[9,7,5,3,1,3,5,7,9];
+const STRENGTH=["equal","slightly more","moderately more","strongly more","very strongly more"];
+
+
+let qValues=Array(10).fill(4);
+let qIdx=0,tRes=null,ahpW=[],resultCharts=[],step1Charts=[];
+
+function goTo(s){
+  [1,2,3,4].forEach(i=>{
+    document.getElementById('sec-'+i).classList.toggle('active',i===s);
+    const n=document.getElementById('nav-'+i);
+    n.classList.remove('active','done');
+    if(i===s)n.classList.add('active'); else if(i<s)n.classList.add('done');
+  });
+  if(s===4)buildResults();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function kpiCls(v,mn,mx,benefit){
+  const nr=(mx===mn)?0.5:(v-mn)/(mx-mn);
+  const good=benefit?nr>=0.67:nr<=0.33,bad=benefit?nr<=0.33:nr>=0.67;
+  return good?'bg':bad?'bb':'bw';
+}
+function buildSupTable(){
+  const mins=KEYS.map(k=>Math.min(...SUPPLIERS.map(s=>s[k])));
+  const maxs=KEYS.map(k=>Math.max(...SUPPLIERS.map(s=>s[k])));
+  let h='<thead><tr><th>Supplier</th><th>Location</th><th>SKUs</th>'+CRIT.map(c=>`<th>${c}</th>`).join('')+'</tr></thead><tbody>';
+  SUPPLIERS.forEach(s=>{
+    h+=`<tr><td class="tn">${s.name}</td><td><span class="loc-chip">${s.location}</span></td><td><span class="chip">${s.skus}</span></td>`;
+    KEYS.forEach((k,i)=>{const v=s[k];h+=`<td><span class="bdg ${kpiCls(v,mins[i],maxs[i],BENEFIT[i])}">${v.toFixed(i===0?3:1)}</span></td>`;});
+    h+='</tr>';
+  });
+  document.getElementById('sup-tbl').innerHTML=h+'</tbody>';
+}
+
+function buildStep1Charts(){
+  step1Charts.forEach(c=>{try{c.destroy();}catch(e){}});step1Charts=[];
+  const names=SUPPLIERS.map(s=>s.name);
+  const defects=SUPPLIERS.map(s=>s.defect),insps=SUPPLIERS.map(s=>s.inspPass);
+  const leads=SUPPLIERS.map(s=>s.leadTime),mfgLeads=SUPPLIERS.map(s=>s.mfgLead),costs=SUPPLIERS.map(s=>s.cost);
+  const base={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{size:10}}},y:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{size:11}}}}};
+  const dmn=Math.min(...defects),dmx=Math.max(...defects);
+  step1Charts.push(new Chart(document.getElementById('c-defect'),{type:'bar',data:{labels:names,datasets:[{label:'Defect Rate %',data:defects,backgroundColor:defects.map(v=>{const t=(v-dmn)/(dmx-dmn);return`rgba(${Math.round(26+t*158)},${Math.round(107-t*33)},${Math.round(60-t*42)},0.85)`;}),borderRadius:7,borderSkipped:false}]},options:{...base,scales:{...base.scales,y:{...base.scales.y,beginAtZero:true,ticks:{callback:v=>v+'%',font:{size:11}}}}}}));
+  step1Charts.push(new Chart(document.getElementById('c-insp'),{type:'line',data:{labels:names,datasets:[{label:'Insp Pass %',data:insps,borderColor:'#1A6B3C',backgroundColor:'rgba(26,107,60,0.1)',pointBackgroundColor:'#1A6B3C',pointBorderColor:'#fff',pointBorderWidth:2,pointRadius:6,fill:true,tension:0.4}]},options:{...base,scales:{...base.scales,y:{min:0,max:100,grid:{color:'rgba(0,0,0,0.04)'},ticks:{callback:v=>v+'%',font:{size:11}}}}}}));
+  step1Charts.push(new Chart(document.getElementById('c-lead'),{type:'bar',data:{labels:names,datasets:[{label:'Lead Time',data:leads,backgroundColor:'rgba(27,79,138,0.8)',borderRadius:5,borderSkipped:false},{label:'Mfg Lead Time',data:mfgLeads,backgroundColor:'rgba(27,79,138,0.25)',borderRadius:5,borderSkipped:false}]},options:{...base,plugins:{legend:{display:true,position:'bottom',labels:{font:{size:11},boxWidth:10,padding:10}}}}}));
+  step1Charts.push(new Chart(document.getElementById('c-cost'),{type:'bar',data:{labels:names,datasets:[{label:'Mfg Cost',data:costs,backgroundColor:'rgba(154,106,16,0.75)',borderRadius:6,borderSkipped:false}]},options:{...base,indexAxis:'y',scales:{x:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{size:11}}},y:{grid:{display:false},ticks:{font:{size:11}}}}}}));
+  function norm(vals,b){const mn=Math.min(...vals),mx=Math.max(...vals);return vals.map(v=>(mx===mn)?50:b?(v-mn)/(mx-mn)*100:(1-(v-mn)/(mx-mn))*100);}
+  step1Charts.push(new Chart(document.getElementById('c-radar'),{type:'radar',data:{labels:['Defect Rate','Lead Time','Mfg Lead Time','Cost','Insp Pass'],datasets:SUPPLIERS.map((s,i)=>({label:s.name,data:[norm(SUPPLIERS.map(x=>x.defect),false)[i],norm(SUPPLIERS.map(x=>x.leadTime),false)[i],norm(SUPPLIERS.map(x=>x.mfgLead),false)[i],norm(SUPPLIERS.map(x=>x.cost),false)[i],norm(SUPPLIERS.map(x=>x.inspPass),true)[i]],borderColor:PAL[i],backgroundColor:PAL_A[i],pointBackgroundColor:PAL[i],pointBorderColor:'#fff',pointBorderWidth:1.5,pointRadius:4,borderWidth:2}))},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'right',labels:{font:{size:11},boxWidth:10,padding:10}}},scales:{r:{min:0,max:100,ticks:{display:false},grid:{color:'rgba(0,0,0,0.07)'},pointLabels:{font:{size:12}}}}}}));
+  step1Charts.push(new Chart(document.getElementById('c-scatter'),{type:'scatter',data:{datasets:SUPPLIERS.map((s,i)=>({label:s.name,data:[{x:s.cost,y:s.defect}],backgroundColor:PAL[i],pointRadius:12,pointHoverRadius:15}))},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'bottom',labels:{font:{size:11},boxWidth:10,padding:8}}},scales:{x:{title:{display:true,text:'Manufacturing Cost',font:{size:11}},grid:{color:'rgba(0,0,0,0.04)'}},y:{title:{display:true,text:'Defect Rate %',font:{size:11}},grid:{color:'rgba(0,0,0,0.04)'}}}}}));
+  const dw=[8,5,4,6,9],sw=dw.reduce((a,b)=>a+b,0);
+  step1Charts.push(new Chart(document.getElementById('c-donut'),{type:'doughnut',data:{labels:CRIT_S,datasets:[{data:dw.map(v=>+(v/sw*100).toFixed(1)),backgroundColor:PAL,borderWidth:3,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{display:true,position:'right',labels:{font:{size:11},boxWidth:10,padding:8}}}}}));
+}
+
+function buildHeatmap(){
+  const mins=KEYS.map(k=>Math.min(...SUPPLIERS.map(s=>s[k])));
+  const maxs=KEYS.map(k=>Math.max(...SUPPLIERS.map(s=>s[k])));
+  let h='<div style="overflow-x:auto"><table class="hm-tbl"><thead><tr><th style="text-align:left">SUPPLIER</th>'+CRIT.map(c=>`<th>${c}</th>`).join('')+'</tr></thead><tbody>';
+  SUPPLIERS.forEach(s=>{
+    h+=`<tr><td>${s.name} <span class="loc-chip" style="margin-left:6px">${s.location}</span></td>`;
+    KEYS.forEach((k,i)=>{
+      const v=s[k],nr=(maxs[i]===mins[i])?0.5:(v-mins[i])/(maxs[i]-mins[i]);
+      const score=BENEFIT[i]?nr:1-nr;
+      const bg=`rgba(${Math.round(26+(1-score)*184)},${Math.round(107+(1-score)*-33)},${Math.round(60+(1-score)*-42)},${0.12+score*0.45})`;
+      const tc=score>0.5?'#0D4526':'#7A1A1A';
+      h+=`<td style="background:${bg}"><div class="hm-cell-val" style="color:${tc}">${v.toFixed(i===0?3:1)}</div><div class="hm-cell-sub" style="color:${tc}">${(score*100).toFixed(0)}/100</div></td>`;
+    });
+    h+='</tr>';
+  });
+  document.getElementById('heatmap-wrap').innerHTML=h+'</tbody></table></div>';
+}
+
+// ===== QUESTIONNAIRE =====
+
+function buildQuestionnaire(){
+  qValues=Array(10).fill(4);
+  const TICK_POSITIONS=[0,1,2,3,4,5,6,7,8];
+  const tH=TICK_POSITIONS.map(ti=>`<div class="q-tick ${(ti===0||ti===4||ti===8)?'tall':'short'}"></div>`).join('');
+  const nH=[9,7,5,3,1,3,5,7,9].map((n,ni)=>`<div class="q-num${ni===4?' centre':''}">${n}</div>`).join('');
+
+
+  let qh='';
+  QS.forEach((q,i)=>{
+    const isLast=i===QS.length-1;
+    const nextBtn=isLast
+      ? `<button class="btn btnk" onclick="showReview()">Review &amp; confirm answers <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></button>`
+      : `<button class="btn btna" onclick="qNav(1)">Next <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>`;
+    const prevBtn=i===0
+      ? ``
+      : `<button class="btn" onclick="qNav(-1)"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Previous</button>`;
+    qh+=`<div class="q-slide${i===0?' active':''}" id="qs-${i}">
+      <div class="q-label">Question ${i+1} of ${QS.length}</div>
+      <div class="q-text">${q.q}</div>
+      <div class="q-opts-row">
+        <div class="q-opt">${q.la}<span class="q-opt-sub">${q.lsub}</span></div>
+        <div class="q-opt right">${q.lb}<span class="q-opt-sub">${q.rsub}</span></div>
+      </div>
+      <div class="q-mid-row">
+        <div class="q-mid-cell">Strong</div>
+        <div class="q-mid-cell">Equal<br>(Indifferent)</div>
+        <div class="q-mid-cell">Strong</div>
+      </div>
+      <div class="q-ruler">
+        <div class="q-ruler-line"></div>
+        <div class="q-ticks" id="tks-${i}">${tH}</div>
+        <input type="range" class="q-slider" id="qsl-${i}" min="0" max="8" step="1" value="4" oninput="onSlider(${i})">
+      </div>
+      <div class="q-nums">${nH}</div>
+      <div class="q-answer ans-equal" id="qa-${i}"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:18px">
+        <div>${prevBtn}</div>
+        <div>${nextBtn}</div>
+      </div>
+    </div>`;
+  });
+  document.getElementById('q-container').innerHTML=qh;
+
+  let dh='';
+  QS.forEach((_,i)=>{dh+=`<div class="q-dot${i===0?' active':''}" id="qd-${i}" onclick="jumpQ(${i})"></div>`;});
+  document.getElementById('q-dots').innerHTML=dh;
+
+  QS.forEach((_,i)=>renderAnswer(i));
+  updateQUI();
+}
+
+
+function onSlider(i){
+  qValues[i]=parseInt(document.getElementById('qsl-'+i).value);
+  renderAnswer(i);
+  highlightTick(i,qValues[i]);
+}
+
+function highlightTick(i,v){
+  document.querySelectorAll(`#tks-${i} .q-tick`).forEach((t,ti)=>{
+    t.style.background=ti===v?'var(--accent)':'var(--ink)';
+    t.style.height=ti===v?(ti===0||ti===4||ti===8?'28px':'20px'):(ti===0||ti===4||ti===8?'24px':'14px');
+  });
+}
+
+function renderAnswer(i){
+  const v=qValues[i],q=QS[i];
+  const dist=Math.abs(v-4),saatyVal=SAATY_MAP[v];
+  const aWins=v<4,equal=v===4;
+  let label,sub,icon,cls;
+  if(equal){
+    label='Equal (Indifferent)';sub='Both criteria carry equal weight — Saaty scale: 1';icon='⚖️';cls='ans-equal';
+  } else if(aWins){
+    label=`<strong>${q.la}</strong> is ${STRENGTH[dist]} important`;
+    sub=`Saaty scale value: ${saatyVal} · Slider moved left → ${q.la} preferred`;icon='←';cls='ans-left';
+  } else {
+    label=`<strong>${q.lb}</strong> is ${STRENGTH[dist]} important`;
+    sub=`Saaty scale value: ${saatyVal} · Slider moved right → ${q.lb} preferred`;icon='→';cls='ans-right';
+  }
+  const iconBg=equal?'var(--paper3)':aWins?'var(--accent2)':'var(--blue2)';
+  const iconCol=equal?'var(--ink2)':aWins?'var(--accent3)':'var(--blue)';
+  const el=document.getElementById('qa-'+i);
+  el.innerHTML=`<div class="q-ans-icon" style="background:${iconBg};color:${iconCol}">${icon}</div><div><div class="q-ans-label">${label}</div><div class="q-ans-sub">${sub}</div></div>`;
+  el.className=`q-answer ${cls}`;
+}
+
+function jumpQ(i){
+  const prev=qIdx;qIdx=i;
+  document.getElementById('qs-'+prev).classList.remove('active');
+  document.getElementById('qs-'+qIdx).classList.add('active');
+  document.getElementById('qd-'+prev).classList.remove('active');
+  document.getElementById('qd-'+qIdx).classList.add('active');
+  if(prev<qIdx)document.getElementById('qd-'+prev).classList.add('done');
+  updateQUI();
+}
+function qNav(dir){jumpQ(Math.max(0,Math.min(QS.length-1,qIdx+dir)));}
+function updateQUI(){
+  const isLast=qIdx===QS.length-1;
+  document.getElementById('q-prog').style.width=(isLast?100:qIdx/(QS.length-1)*100)+'%';
+  document.getElementById('q-count').textContent=`${qIdx+1} / ${QS.length}`;
+  if(isLast)QS.forEach((_,i)=>document.getElementById('qd-'+i).classList.add('done'));
+}
+
+
+// ===== REVIEW PANEL =====
+function showReview(){
+  // hide questionnaire card, show review panel
+  document.getElementById('q-container').closest('.card').style.display='none';
+  document.querySelector('.q-prog-wrap').style.display='none';
+  document.querySelector('#sec-2 .q-nav-row').style.display='none';
+  document.querySelector('#sec-2 .brow').style.display='none';
+  document.getElementById('review-panel').classList.add('active');
+  buildReviewRows();
+}
+
+function backToQuestionnaire(){
+  document.getElementById('q-container').closest('.card').style.display='';
+  document.querySelector('.q-prog-wrap').style.display='';
+  document.querySelector('#sec-2 .q-nav-row').style.display='';
+  document.querySelector('#sec-2 .brow').style.display='';
+  document.getElementById('review-panel').classList.remove('active');
+}
+
+function buildReviewRows(){
+  const STRENGTH_SHORT=['Equally important','Slightly more','Moderately more','Strongly more','Very strongly more'];
+  let html='';
+  QS.forEach((q,i)=>{
+    const v=qValues[i];
+    const dist=Math.abs(v-4);
+    const aWins=v<4, equal=v===4;
+    const saatyVal=SAATY_MAP[v];
+    let chipCls, chipTxt, dirTxt;
+    if(equal){
+      chipCls='rc-equal'; chipTxt='Equal'; dirTxt='Both equally important';
+    } else if(aWins){
+      chipCls='rc-left';
+      chipTxt=STRENGTH_SHORT[dist];
+      dirTxt=`<strong>${q.la}</strong> preferred (Saaty: ${saatyVal})`;
+    } else {
+      chipCls='rc-right';
+      chipTxt=STRENGTH_SHORT[dist];
+      dirTxt=`<strong>${q.lb}</strong> preferred (Saaty: ${saatyVal})`;
+    }
+    html+=`<div class="review-row">
+      <div class="review-qnum">Q${i+1}</div>
+      <div class="review-crits"><strong>${q.la}</strong> <span style="color:var(--ink3);font-size:11px">vs</span> <strong>${q.lb}</strong></div>
+      <div class="review-answer">
+        <span class="review-chip ${chipCls}">${chipTxt}</span>
+        <span style="font-size:11px;color:var(--ink2)">${dirTxt}</span>
+      </div>
+      <button class="review-edit" onclick="editQuestion(${i})">
+        <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Edit
+      </button>
+    </div>`;
+  });
+  document.getElementById('review-rows').innerHTML=html;
+}
+
+function editQuestion(i){
+  backToQuestionnaire();
+  jumpQ(i);
+  // After returning, make the last-question button say "Review" again
+  // (it was already set to showReview in the template)
+}
+
+// ===== AHP + TOPSIS =====
+function buildMatrix(){
+  const n=5,M=Array.from({length:n},()=>Array(n).fill(1));
+  QS.forEach((q,idx)=>{
+    const v=qValues[idx],sv=SAATY_MAP[v];
+    if(v===4){M[q.a][q.b]=1;M[q.b][q.a]=1;}
+    else if(v<4){M[q.a][q.b]=sv;M[q.b][q.a]=1/sv;}
+    else{M[q.b][q.a]=sv;M[q.a][q.b]=1/sv;}
+  });
+  return M;
+}
+function calcAHP(M){
+  const n=M.length;
+  const cs=M[0].map((_,j)=>M.reduce((s,r)=>s+r[j],0));
+  const nm=M.map(r=>r.map((v,j)=>v/cs[j]));
+  const w=nm.map(r=>r.reduce((s,v)=>s+v,0)/n);
+  const Aw=M.map(r=>r.reduce((s,v,j)=>s+v*w[j],0));
+  const lm=Aw.reduce((s,v,i)=>s+v/w[i],0)/n;
+  return{w,CR:((lm-n)/(n-1))/RI[n]};
+}
+function calcTOPSIS(w){
+  const X=SUPPLIERS.map(s=>KEYS.map(k=>s[k]));
+  const cn=KEYS.map((_,j)=>Math.sqrt(X.reduce((s,r)=>s+r[j]*r[j],0)));
+  const R=X.map(r=>r.map((v,j)=>v/(cn[j]||1)));
+  const V=R.map(r=>r.map((v,j)=>v*w[j]));
+  const PIS=CRIT.map((_,j)=>BENEFIT[j]?Math.max(...V.map(r=>r[j])):Math.min(...V.map(r=>r[j])));
+  const NIS=CRIT.map((_,j)=>BENEFIT[j]?Math.min(...V.map(r=>r[j])):Math.max(...V.map(r=>r[j])));
+  const Dp=V.map(r=>Math.sqrt(r.reduce((s,v,j)=>s+(v-PIS[j])**2,0)));
+  const Dm=V.map(r=>Math.sqrt(r.reduce((s,v,j)=>s+(v-NIS[j])**2,0)));
+  const Ci=Dp.map((dp,i)=>Dm[i]/(dp+Dm[i]));
+  return{w,V,PIS,NIS,Dp,Dm,Ci};
+}
+function computeAll(){
+  const M=buildMatrix();
+  const{w,CR}=calcAHP(M);
+  ahpW=w;tRes=calcTOPSIS(w);tRes.CR=CR;tRes.M=M;
+  buildStep3HTML();goTo(3);
+}
+function buildStep3HTML(){
+  const{w,V,PIS,NIS,Dp,Dm,Ci,CR,M}=tRes;
+  const WC=["#1A6B3C","#1B4F8A","#B84A12","#9A6A10","#5C3A8A"];
+  const sorted=[...w.map((wv,i)=>({wv,i}))].sort((a,b)=>b.wv-a.wv);
+  let bars='';
+  sorted.forEach((it,r)=>{const p=(it.wv*100).toFixed(1);bars+=`<div class="wbar"><div class="wbar-lbl">${CRIT[it.i]}</div><div class="wbar-track"><div class="wbar-fill" style="width:${p}%;background:${WC[it.i]}"><span class="wbar-pct">${p}%</span></div></div><div class="wbar-rank">#${r+1}</div></div>`;});
+  document.getElementById('weight-bars').innerHTML=bars;
+  const cp=document.getElementById('cr-pill');
+  cp.textContent=CR<0.1?`✓ CR = ${CR.toFixed(3)} — Consistent`:`⚠ CR = ${CR.toFixed(3)} — Inconsistent`;
+  cp.className='cr-pill '+(CR<0.1?'cr-ok':'cr-bad');
+  const ab=["DR","LT","ML","CO","IP"];
+  let mh='<table class="mtx"><thead><tr><th></th>'+ab.map(a=>`<th>${a}</th>`).join('')+'</tr></thead><tbody>';
+  M.forEach((row,i)=>{mh+=`<tr><th>${ab[i]}</th>`+row.map((v,j)=>`<td${i===j?' class="mtx-d"':''}>${i===j?'1':v>=1?v.toFixed(2):'1/'+Math.round(1/v)}</td>`).join('')+'</tr>';});
+  document.getElementById('ahp-matrix').innerHTML=mh+'</tbody></table>';
+  let nm='<table class="tbl"><thead><tr><th>Supplier</th>'+CRIT_S.map(c=>`<th>${c}</th>`).join('')+'</tr></thead><tbody>';
+  SUPPLIERS.forEach((s,i)=>{nm+=`<tr><td class="tn">${s.name}</td>`+V[i].map(v=>`<td>${v.toFixed(5)}</td>`).join('')+'</tr>';});
+  document.getElementById('norm-matrix').innerHTML=nm+'</tbody></table>';
+  let it='<table class="tbl"><thead><tr><th>Solution</th>'+CRIT_S.map(c=>`<th>${c}</th>`).join('')+'</tr></thead><tbody>';
+  it+=`<tr><td><span class="bdg bg">PIS — ideal best</span></td>`+PIS.map(v=>`<td>${v.toFixed(5)}</td>`).join('')+'</tr>';
+  it+=`<tr><td><span class="bdg bb">NIS — ideal worst</span></td>`+NIS.map(v=>`<td>${v.toFixed(5)}</td>`).join('')+'</tr>';
+  document.getElementById('ideal-table').innerHTML=it+'</tbody></table>';
+  const ranked=[...Ci.map((c,i)=>({c,i}))].sort((a,b)=>b.c-a.c);
+  const rm={};ranked.forEach((r,p)=>{rm[r.i]=p+1;});
+  const mc=['m1','m2','m3','mn','mn'];
+  let dt='<table class="tbl"><thead><tr><th>Supplier</th><th>D⁺</th><th>D⁻</th><th>Ci</th><th>Rank</th></tr></thead><tbody>';
+  SUPPLIERS.forEach((s,i)=>{const r=rm[i];dt+=`<tr><td class="tn">${s.name}</td><td>${Dp[i].toFixed(5)}</td><td>${Dm[i].toFixed(5)}</td><td><strong>${Ci[i].toFixed(4)}</strong></td><td><span class="medal ${mc[r-1]}">${r}</span></td></tr>`;});
+  document.getElementById('dist-table').innerHTML=dt+'</tbody></table>';
+}
+function buildResults(){
+  if(!tRes||!SUPPLIERS.length)return;
+  const{Ci,Dp,Dm,w,V}=tRes;
+  const ranked=[...Ci.map((c,i)=>({c,i,s:SUPPLIERS[i],dp:Dp[i],dm:Dm[i]}))].sort((a,b)=>b.c-a.c);
+  const top=ranked[0];
+  document.getElementById('dban').innerHTML=`<div class="dban"><div class="dico"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><div><div class="dtitle">Recommended: ${top.s.name} — ${top.s.location}</div><div class="dsub">Closeness coefficient Ci = ${top.c.toFixed(4)} · Highest proximity to ideal supplier across all weighted KPIs · ${top.s.skus} SKUs evaluated</div></div></div>`;
+  document.getElementById('smets').innerHTML=`<div class="mcard"><div class="mlbl">Winner Ci score</div><div class="mval">${ranked[0].c.toFixed(3)}</div></div><div class="mcard"><div class="mlbl">Gap to 2nd place</div><div class="mval">${(ranked[0].c-ranked[1].c).toFixed(3)}</div></div><div class="mcard"><div class="mlbl">Suppliers evaluated</div><div class="mval">${SUPPLIERS.length}</div></div>`;
+  const mc=['m1','m2','m3','mn','mn'],ml=['1st','2nd','3rd','4th','5th'];
+  let rt='<thead><tr><th>Rank</th><th>Supplier</th><th>Location</th><th>SKUs</th><th>Ci score</th><th>D⁺</th><th>D⁻</th></tr></thead><tbody>';
+  ranked.forEach((r,pos)=>{rt+=`<tr><td><span class="medal ${mc[pos]}">${ml[pos]}</span></td><td style="font-weight:${pos===0?700:400}">${r.s.name}</td><td><span class="loc-chip">${r.s.location}</span></td><td><span class="chip">${r.s.skus}</span></td><td><span class="sbar" style="width:${Math.round(r.c*80)}px"></span><strong>${r.c.toFixed(4)}</strong></td><td style="font-size:11px;color:var(--ink3)">${r.dp.toFixed(5)}</td><td style="font-size:11px;color:var(--ink3)">${r.dm.toFixed(5)}</td></tr>`;});
+  document.getElementById('rank-tbl').innerHTML=rt+'</tbody>';
+  resultCharts.forEach(c=>{try{c.destroy();}catch(e){}});resultCharts=[];
+  resultCharts.push(new Chart(document.getElementById('ci-chart'),{type:'bar',data:{labels:ranked.map(r=>r.s.name),datasets:[{label:'Ci',data:ranked.map(r=>+r.c.toFixed(4)),backgroundColor:ranked.map((_,i)=>i===0?PAL[0]:'rgba(26,107,60,0.28)'),borderRadius:7,borderSkipped:false}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{min:0,max:1,grid:{color:'rgba(0,0,0,0.04)'},ticks:{callback:v=>v.toFixed(2),font:{size:11}}},y:{grid:{display:false},ticks:{font:{size:11}}}}}}));
+  resultCharts.push(new Chart(document.getElementById('dist-chart'),{type:'bar',data:{labels:ranked.map(r=>r.s.name),datasets:[{label:'D⁺ to ideal best',data:ranked.map(r=>+r.dp.toFixed(5)),backgroundColor:'#B84A12',borderRadius:5,borderSkipped:false},{label:'D⁻ to ideal worst',data:ranked.map(r=>+r.dm.toFixed(5)),backgroundColor:'#1A6B3C',borderRadius:5,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'bottom',labels:{font:{size:11},boxWidth:10,padding:10}}},scales:{x:{ticks:{font:{size:11}}},y:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{size:11}}}}}}));
+  resultCharts.push(new Chart(document.getElementById('contrib-chart'),{type:'bar',data:{labels:ranked.map(r=>r.s.name),datasets:CRIT_S.map((c,ci)=>({label:c,data:ranked.map(r=>+V[r.i][ci].toFixed(5)),backgroundColor:PAL[ci],borderRadius:ci===CRIT_S.length-1?5:0,borderSkipped:false}))},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'bottom',labels:{font:{size:11},boxWidth:10,padding:10}}},scales:{x:{stacked:true,ticks:{font:{size:11}}},y:{stacked:true,grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{size:11}}}}}}));
+}
+buildSupTable();buildStep1Charts();buildHeatmap();buildQuestionnaire();
+</script>
+</body>
+</html>
